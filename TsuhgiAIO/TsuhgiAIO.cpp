@@ -59,6 +59,14 @@ void TsuhgiAIO::lucian()
 	static auto r = this->sdk->CreateSpell2(kSlotR, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithHeroes | kCollidesWithMinions | kCollidesWithYasuoWall));
 	r->SetSkillshot(0.20f, 110.f, 2500.f, 1400.f);
 
+	//ty based hoola
+	auto deviation = [&](Vec2 p1, Vec2 p2, double angle) -> Vec2 {
+		auto rads = static_cast<float>(angle * (M_PI / 180.0));
+
+		auto diff = (p2 - p1);
+		return Vec2((diff.x * cos(rads) - diff.y * sin(rads)) / 4.f, (diff.x * sin(rads) + diff.y * cos(rads)) / 4.f) + p1;
+	};
+
 	eventmanager::GameEventManager::RegisterUpdateEvent([&]() -> void {
 		auto mode = orbwalking->GetOrbwalkingMode();
 
@@ -120,7 +128,7 @@ void TsuhgiAIO::lucian()
 				{
 					if (e->IsReady() && useECombo->Enabled())
 					{
-						e->CastOnPosition(game->CursorPosition());
+						e->CastOnPosition(LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65)));
 					}
 					else if (q->IsReady() && useQCombo->Enabled())
 					{
