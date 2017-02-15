@@ -107,7 +107,6 @@ void TsuhgiAIO::lucian()
 	});
 
 	eventmanager::UnitEventManager::RegisterDoCastEvent([&](CastedSpell const &spell) -> void {
-
 		if (spellDataReader->IsAutoAttack(spell.Data_)
 			&& spellDataReader->GetCaster(spell.Data_)->GetNetworkId() == player->GetNetworkId())
 		{
@@ -179,14 +178,9 @@ void TsuhgiAIO::lucian()
 
 IUnit *TsuhgiAIO::findTarget(float range, eDamageType damage) const
 {
-	static auto orbwalking = this->sdk->GetOrbwalking();
-	static auto player = this->sdk->GetEntityList()->Player();
 	static auto targetselector = this->sdk->CreateTargetSelector();
 
-	auto target = orbwalking->GetLastTarget();
-
-	return (target != nullptr && target->IsHero() && player->IsValidTarget(target, range)) ?
-		target : targetselector->FindTarget(QuickestKill, damage, range);
+	return targetselector->FindTarget(QuickestKill, damage, range);
 }
 
 TsuhgiAIO::~TsuhgiAIO()
