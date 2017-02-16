@@ -35,7 +35,7 @@ void TsuhgiAIO::lucian()
 	static auto miscMenu = this->menu->AddMenu("Misc Settings");
 	static auto useQAutoHarass = miscMenu->CheckBox("Auto Extended Q", true);
 	static auto minManaQAutoHarass = miscMenu->AddFloat("Min Mana For Extended Q", 0.f, 100.f, 30.f);
-	static auto eMode = comboMenu->AddInteger("E position (0 = side, 1 = mouse) ", 0, 0, 2);
+	static auto eMode = comboMenu->AddInteger("E position (0 = side, 1 = mouse, 2 = target) ", 0, 2, 0);
 
 
 	static auto game = this->sdk->GetGame();
@@ -131,10 +131,16 @@ void TsuhgiAIO::lucian()
 					if (e->IsReady() && useECombo->Enabled())
 					{
 						Vec3 pos;
+						
+						auto m = eMode->GetInteger();
 
-						if (eMode->GetInteger() == 0)
+						if (m == 0)
 						{
 							pos = LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65));
+						}
+						else if (m == 1)
+						{
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 						else
 						{
@@ -173,9 +179,15 @@ void TsuhgiAIO::lucian()
 					{
 						Vec3 pos;
 
-						if (eMode->GetInteger() == 0)
+						auto m = eMode->GetInteger();
+
+						if (m == 0)
 						{
 							pos = LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65));
+						}
+						else if (m == 1)
+						{
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 						else
 						{
