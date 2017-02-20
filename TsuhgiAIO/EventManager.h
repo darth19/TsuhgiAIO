@@ -1,27 +1,26 @@
 #pragma once
 #include <functional>
+#include <vector>
 #include "PluginData.h"
 #include "PluginSDK.h"
-
-typedef unsigned int event_id_t;
 
 namespace eventmanager {
 	class OrbwalkerEventManager
 	{
 	public:
-		static event_id_t RegisterBeforeAttackEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func);
-		static event_id_t RegisterAfterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func);
-		static event_id_t RegisterNewTargetEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func);
-		static event_id_t RegisterNonKillableMinionEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterFindTargetEvent(std::function<IUnit *(event_id_t)> func);
+		static void RegisterBeforeAttackEvent(std::function<void(IUnit *)> func);
+		static void RegisterAttackEvent(std::function<void(IUnit *, IUnit *)> func);
+		static void RegisterAfterAttackEvent(std::function<void(IUnit *, IUnit *)> func);
+		static void RegisterNewTargetEvent(std::function<void(IUnit *, IUnit *)> func);
+		static void RegisterNonKillableMinionEvent(std::function<void(IUnit *)> func);
+		static void RegisterFindTargetEvent(std::function<IUnit *()> func);
 
-		static void UnregisterBeforeAttackEvent(event_id_t id);
-		static void UnregisterAttackEvent(event_id_t id);
-		static void UnregisterAfterAttackEvent(event_id_t id);
-		static void UnregisterNewTargetEvent(event_id_t id);
-		static void UnregisterNonKillableMinionEvent(event_id_t id);
-		static void UnregisterFindTargetEvent(event_id_t id);
+		static std::vector<std::function<void(IUnit *)>> beforeAttackHandlers;
+		static std::vector<std::function<void(IUnit *, IUnit *)>> attackHandlers;
+		static std::vector<std::function<void(IUnit *, IUnit *)>> afterAttackHandlers;
+		static std::vector<std::function<void(IUnit *, IUnit *)>> newTargetHandlers;
+		static std::vector<std::function<void(IUnit *)>> nonKillableMinionHandlers;
+		static std::vector<std::function<IUnit *()>> findTargetHandlers;
 
 	private:
 		OrbwalkerEventManager() {}
@@ -30,13 +29,13 @@ namespace eventmanager {
 	class GameEventManager
 	{
 	public:
-		static event_id_t RegisterUpdateEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterEndEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterWndProcEvent(std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func);
+		static void RegisterUpdateEvent(std::function<void()> func);
+		static void RegisterEndEvent(std::function<void()> func);
+		static void RegisterWndProcEvent(std::function<bool(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func);
 
-		static void UnregisterUpdateEvent(event_id_t id);
-		static void UnregisterEndEvent(event_id_t id);
-		static void UnregisterWndProcEvent(event_id_t id);
+		static std::vector<std::function<void()>> updateHandlers;
+		static std::vector<std::function<void()>> endHandlers;
+		static std::vector<std::function<bool(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)>> wndProcHandlers;
 
 	private:
 		GameEventManager() {}
@@ -45,17 +44,17 @@ namespace eventmanager {
 	class DrawEventManager
 	{
 	public:
-		static event_id_t RegisterRenderEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterRenderBehindHudEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterD3DPresentEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterD3DPreResetEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterD3DPostResetEvent(std::function<void(event_id_t)> func);
+		static void RegisterRenderEvent(std::function<void()> func);
+		static void RegisterRenderBehindHudEvent(std::function<void()> func);
+		static void RegisterD3DPresentEvent(std::function<void()> func);
+		static void RegisterD3DPreResetEvent(std::function<void()> func);
+		static void RegisterD3DPostResetEvent(std::function<void()> func);
 
-		static void UnregisterRenderEvent(event_id_t id);
-		static void UnregisterRenderBehindHudEvent(event_id_t id);
-		static void UnregisterD3DPresentEvent(event_id_t id);
-		static void UnregisterD3DPreResetEvent(event_id_t id);
-		static void UnregisterD3DPostResetEvent(event_id_t id);
+		static std::vector<std::function<void()>> renderHandlers;
+		static std::vector<std::function<void()>> renderBehindHudEventHandlers;
+		static std::vector<std::function<void()>> D3DPresentEventHandlers;
+		static std::vector<std::function<void()>> D3DPreResetEventHandlers;
+		static std::vector<std::function<void()>> D3DPostResetEventHandlers;
 
 	private:
 		DrawEventManager() {}
@@ -64,43 +63,41 @@ namespace eventmanager {
 	class UnitEventManager
 	{
 	public:
-		static event_id_t RegisterCreateEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterDestroyEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterDeathEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterIssueOrderEvent(std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)> func);
-		static event_id_t RegisterPreCastEvent(std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)> func);
-		static event_id_t RegisterUpdateChargedSpellEvent(std::function<void(event_id_t, int, Vec3 *, bool *, bool *)> func);
-		static event_id_t RegisterProcessSpellCastEvent(std::function<void(event_id_t, CastedSpell const &)> func);
-		static event_id_t RegisterDoCastEvent(std::function<void(event_id_t, CastedSpell const &)> func);
-		static event_id_t RegisterProcessInterruptibleSpellEvent(std::function<void(event_id_t, InterruptibleSpell const &)> func);
-		static event_id_t RegisterProcessGapCloserSpellEvent(std::function<void(event_id_t, GapCloserSpell const &)> func);
-		static event_id_t RegisterBuffAddEvent(std::function<void(event_id_t, IUnit *, void *)> func);
-		static event_id_t RegisterBuffRemoveEvent(std::function<void(event_id_t, IUnit *, void *)> func);
-		static event_id_t RegisterLevelUpEvent(std::function<void(event_id_t, IUnit *, int)> func);
-		static event_id_t RegisterDashEvent(std::function<void(event_id_t, UnitDash *)> func);
-		static event_id_t RegisterEnterVisibilityEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterExitVisibilityEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterPlayAnimationEvent(std::function<bool(event_id_t, IUnit *, std::string const)> func);
-		static event_id_t RegisterPauseAnimationEvent(std::function<bool(event_id_t, IUnit *, std::string const)> func);
+		static void RegisterCreateEvent(std::function<void(IUnit *)> func);
+		static void RegisterDestroyEvent(std::function<void(IUnit *)> func);
+		static void RegisterDeathEvent(std::function<void(IUnit *)> func);
+		static void RegisterIssueOrderEvent(std::function<bool(IUnit *, int, Vec3 *, IUnit *)> func);
+		static void RegisterPreCastEvent(std::function<bool(int, IUnit *, Vec3 *, Vec3 *)> func);
+		static void RegisterUpdateChargedSpellEvent(std::function<void(int, Vec3 *, bool *, bool *)> func);
+		static void RegisterProcessSpellCastEvent(std::function<void(CastedSpell const &)> func);
+		static void RegisterDoCastEvent(std::function<void(CastedSpell const &)> func);
+		static void RegisterProcessInterruptibleSpellEvent(std::function<void(InterruptibleSpell const &)> func);
+		static void RegisterProcessGapCloserSpellEvent(std::function<void(GapCloserSpell const &)> func);
+		static void RegisterBuffAddEvent(std::function<void(IUnit *, void *)> func);
+		static void RegisterBuffRemoveEvent(std::function<void(IUnit *, void *)> func);
+		static void RegisterLevelUpEvent(std::function<void(IUnit *, int)> func);
+		static void RegisterDashEvent(std::function<void(UnitDash *)> func);
+		static void RegisterEnterVisibilityEvent(std::function<void(IUnit *)> func);
+		static void RegisterExitVisibilityEvent(std::function<void(IUnit *)> func);
+		static void RegisterPlayAnimationEvent(std::function<bool(IUnit *, std::string const)> func);
 
-		static void UnregisterCreateEvent(event_id_t id);
-		static void UnregisterDestroyEvent(event_id_t id);
-		static void UnregisterDeathEvent(event_id_t id);
-		static void UnregisterIssueOrderEvent(event_id_t id);
-		static void UnregisterPreCastEvent(event_id_t id);
-		static void UnregisterUpdateChargedSpellEvent(event_id_t id);
-		static void UnregisterProcessSpellCastEvent(event_id_t id);
-		static void UnregisterDoCastEvent(event_id_t id);
-		static void UnregisterProcessInterruptibleSpellEvent(event_id_t id);
-		static void UnregisterProcessGapCloserSpellEvent(event_id_t id);
-		static void UnregisterBuffAddEvent(event_id_t id);
-		static void UnregisterBuffRemoveEvent(event_id_t id);
-		static void UnregisterLevelUpEvent(event_id_t id);
-		static void UnregisterDashEvent(event_id_t id);
-		static void UnregisterEnterVisibilityEvent(event_id_t id);
-		static void UnregisterExitVisibilityEvent(event_id_t id);
-		static void UnregisterPlayAnimationEvent(event_id_t id);
-		static void UnregisterPauseAnimationEvent(event_id_t id);
+		static std::vector<std::function<void(IUnit *)>> createHandlers;
+		static std::vector<std::function<void(IUnit *)>> destroyHandlers;
+		static std::vector<std::function<void(IUnit *)>> deathHandlers;
+		static std::vector<std::function<bool(IUnit *, int, Vec3 *, IUnit *)>> issueOrderHandlers;
+		static std::vector<std::function<bool(int, IUnit *, Vec3 *, Vec3 *)>> preCastHandlers;
+		static std::vector<std::function<void(int, Vec3 *, bool *, bool *)>> updateChargedSpellHandlers;
+		static std::vector<std::function<void(CastedSpell const &)>> processSpellCastHandlers;
+		static std::vector<std::function<void(CastedSpell const &)>> doCastHandlers;
+		static std::vector<std::function<void(InterruptibleSpell const &)>> processInterruptibleSpellHandlers;
+		static std::vector<std::function<void(GapCloserSpell const &)>> processGapCloserSpellHandlers;
+		static std::vector<std::function<void(IUnit *, void *)>> buffAddHandlers;
+		static std::vector<std::function<void(IUnit *, void *)>> buffRemoveHandlers;
+		static std::vector<std::function<void(IUnit *, int)>> levelUpHandlers;
+		static std::vector<std::function<void(UnitDash *)>> dashHandlers;
+		static std::vector<std::function<void(IUnit *)>> enterVisibilityHandlers;
+		static std::vector<std::function<void(IUnit *)>> exitVisibilityHandlers;
+		static std::vector<std::function<bool(IUnit *, std::string const)>> playAnimationHandlers;
 
 	private:
 		UnitEventManager() {}

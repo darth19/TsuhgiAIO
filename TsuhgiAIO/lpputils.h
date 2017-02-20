@@ -7,23 +7,26 @@
 class LPPUtils
 {
 public:
-	static void RepeatUntil(IPluginSDK *sdk, std::function<void()> action, std::function<bool()> condition, unsigned long maxTick = 50)
+	static void CreateConsoleWindow()
 	{
-		auto startTick = GetTickCount();
-		auto e = eventmanager::GameEventManager::RegisterUpdateEvent([=](event_id_t id) -> void {
-
-			if (condition() || (GetTickCount() - startTick) > maxTick)
-			{
-				eventmanager::GameEventManager::UnregisterUpdateEvent(id);
-				return;
-			}
-			action();
-		});
+		AllocConsole();
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+		SetConsoleTitleA("Debug Console");
 	}
-	template<typename T>
-	static void RemoveIfExists(std::vector<T> vec, T e)
+
+	static void LogConsole(char* Fmt, ...)
 	{
-		vec.erase(std::remove(vec.begin(), vec.end(), e), vec.end());
+		DWORD dwBytes = 0;
+		char szBuffer[1024] = { 0 };
+
+		va_list va;
+		va_start(va, Fmt);
+		vsnprintf_s(szBuffer, sizeof(szBuffer), Fmt, va);
+		va_end(va);
+
+		strcat_s(szBuffer, "\n");
+
+		WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), szBuffer, strlen(szBuffer), &dwBytes, nullptr);
 	}
 
 	static int CountEnemiesNearMe(IPluginSDK* sdk, float range)
@@ -210,25 +213,4 @@ public:
 	{
 		return GetAsyncKeyState(menuOption->GetInteger()) & 0x8000;
 	}
-
-	static IMenuOption *AddKeyBindToggle(IMenu* menu, std::string name, char key, bool enabled)
-	{
-		auto menuOption = menu->CheckBox(name.c_str(), enabled);
-		auto toggleOption = menu->AddKey((name + " Toggle").c_str(), key);
-
-		eventmanager::GameEventManager::RegisterUpdateEvent([=](event_id_t id) mutable -> void {
-			static auto previousState = false;
-
-			auto currentState = LPPUtils::IsKeyDown(toggleOption);
-
-			if (previousState && !currentState)
-			{
-				menuOption->UpdateInteger(!menuOption->GetInteger());
-			}
-
-			previousState = currentState;
-		});
-
-		return menuOption;
-	};
 };

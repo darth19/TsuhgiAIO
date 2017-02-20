@@ -151,7 +151,6 @@
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="LPPConstants.h" />
     <ClInclude Include="lpputils.h" />
-    <ClInclude Include="MenuWrapper.h" />
     <ClInclude Include="PluginData.h" />
     <ClInclude Include="PluginSDK.h" />
     <ClInclude Include="TsuhgiAIO.h" />
