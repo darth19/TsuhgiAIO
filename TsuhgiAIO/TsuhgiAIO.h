@@ -8,7 +8,7 @@ public:
 	~TsuhgiAIO();
 private:
 //	void ashe();
-//	void ezreal();
+	void ezreal();
 //	void graves();
 //	void jhin();
 //	void kalista();

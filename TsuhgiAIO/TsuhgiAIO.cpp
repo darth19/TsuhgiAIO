@@ -12,10 +12,18 @@ TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
 	std::string champName = player->ChampionName();
 	boost::algorithm::to_lower(champName);
 
+	if (champName == "ezreal")
+	{
+		this->ezreal();
+	}
 	if (champName == "lucian")
 	{
 		this->lucian();
 	}
+}
+
+void TsuhgiAIO::ezreal()
+{
 }
 
 void TsuhgiAIO::lucian()
@@ -69,7 +77,7 @@ void TsuhgiAIO::lucian()
 		return Vec2((diff.x * cos(rads) - diff.y * sin(rads)) / 4.f, (diff.x * sin(rads) + diff.y * cos(rads)) / 4.f) + p1;
 	};
 
-	eventmanager::GameEventManager::RegisterUpdateEvent([&]() -> void {
+	eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void {
 		auto mode = orbwalking->GetOrbwalkingMode();
 
 		if ((mode == kModeCombo && useQCombo->Enabled())
@@ -116,7 +124,7 @@ void TsuhgiAIO::lucian()
 		}
 	});
 
-	eventmanager::UnitEventManager::RegisterDoCastEvent([&](CastedSpell const &spell) -> void {
+	eventmanager::UnitEventManager::RegisterDoCastEvent([&](event_id_t id, CastedSpell const &spell) -> void {
 		if (spellDataReader->IsAutoAttack(spell.Data_)
 			&& spellDataReader->GetCaster(spell.Data_)->GetNetworkId() == player->GetNetworkId())
 		{
@@ -140,14 +148,19 @@ void TsuhgiAIO::lucian()
 						}
 						else if (m == 1)
 						{
-							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
+							pos = game->CursorPosition();
 						}
 						else
 						{
-							pos = game->CursorPosition();
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 
-						e->CastOnPosition(pos);
+						//workaround until we figure this humanizer shit out
+						LPPUtils::RepeatUntil(this->sdk, [&, pos]() -> void {
+							e->CastOnPosition(pos); 
+						}, [&]() -> bool {
+							return !e->IsReady();
+						});
 					}
 					else if (q->IsReady() && useQCombo->Enabled())
 					{
@@ -155,7 +168,12 @@ void TsuhgiAIO::lucian()
 
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
-							q->CastOnUnit(target);
+							//workaround until we figure this humanizer shit out
+							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
+								q->CastOnUnit(qTarget);
+							}, [&]() -> bool {
+								return !q->IsReady();
+							});
 						}
 					}
 					else if (w->IsReady() && useWCombo->Enabled())
@@ -164,7 +182,12 @@ void TsuhgiAIO::lucian()
 
 						if (wTarget != nullptr && wTarget->IsValidTarget())
 						{
-							w->CastOnTarget(wTarget);
+							//workaround until we figure this humanizer shit out
+							LPPUtils::RepeatUntil(this->sdk, [&, wTarget]() -> void {
+								w->CastOnTarget(wTarget);
+							}, [&]() -> bool {
+								return !w->IsReady();
+							});
 						}
 					}
 				}
@@ -187,11 +210,73 @@ void TsuhgiAIO::lucian()
 						}
 						else if (m == 1)
 						{
-							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
+							pos = game->CursorPosition();
 						}
 						else
 						{
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
+						}
+
+						//workaround until we figure this humanizer shit out
+						LPPUtils::RepeatUntil(this->sdk, [&, pos]() -> void {
+							e->CastOnPosition(pos);
+						}, [&]() -> bool {
+							return !e->IsReady();
+						});
+					}
+					else if (q->IsReady() && useQHarass->Enabled())
+					{
+						auto qTarget = this->findTarget(q->Range(), PhysicalDamage);
+
+						if (qTarget != nullptr && qTarget->IsValidTarget())
+						{
+							//workaround until we figure this humanizer shit out
+							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
+								q->CastOnUnit(qTarget);
+							}, [&]() -> bool {
+								return !q->IsReady();
+							});
+						}
+					}
+					else if (w->IsReady() && useWHarass->Enabled())
+					{
+						auto wTarget = this->findTarget(w->Range(), SpellDamage);
+
+						if (wTarget != nullptr && wTarget->IsValidTarget())
+						{
+							//workaround until we figure this humanizer shit out
+							LPPUtils::RepeatUntil(this->sdk, [&, wTarget]() -> void {
+								w->CastOnTarget(wTarget);
+							}, [&]() -> bool {
+								return !w->IsReady();
+							});
+						}
+					}
+				}
+			}
+			else if (mode == kModeLaneClear && player->ManaPercent() >= minManaHarass->GetFloat())
+			{
+				auto target = spellDataReader->GetTarget(spell.Data_);
+
+				if (target != nullptr && target->IsJungleCreep() && target->IsValidTarget() && damage->GetAutoAttackDamage(player, target, true) < target->GetHealth())
+				{
+					if (e->IsReady() && useEHarass->Enabled())
+					{
+						Vec3 pos;
+
+						auto m = eMode->GetInteger();
+
+						if (m == 0)
+						{
+							pos = LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65));
+						}
+						else if (m == 1)
+						{
 							pos = game->CursorPosition();
+						}
+						else
+						{
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 
 						e->CastOnPosition(pos);

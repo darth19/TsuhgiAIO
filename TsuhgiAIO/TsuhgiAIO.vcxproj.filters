@@ -50,5 +50,8 @@
     <ClInclude Include="TsuhgiAIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MenuWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
