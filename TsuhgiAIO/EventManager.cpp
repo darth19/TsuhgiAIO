@@ -1,247 +1,589 @@
 #include "EventManager.h"
+#include "lpputils.h"
 
 namespace eventmanager
 {
 	/**
 	* OrbwalkerEventManager
 	*/
-	std::vector<std::function<void(IUnit *)>> OrbwalkerEventManager::beforeAttackHandlers;
-	std::vector<std::function<void(IUnit *, IUnit *)>> OrbwalkerEventManager::attackHandlers;
-	std::vector<std::function<void(IUnit *, IUnit *)>> OrbwalkerEventManager::afterAttackHandlers;
-	std::vector<std::function<void(IUnit *, IUnit *)>> OrbwalkerEventManager::newTargetHandlers;
-	std::vector<std::function<void(IUnit *)>> OrbwalkerEventManager::nonKillableMinionHandlers;
-	std::vector<std::function<IUnit *()>> OrbwalkerEventManager::findTargetHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> beforeAttackHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, IUnit *)>> attackHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, IUnit *)>> afterAttackHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, IUnit *)>> newTargetHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> nonKillableMinionHandlers;
+	static std::vector<std::function<IUnit *(event_id_t)>> findTargetHandlers;
 
-	void OrbwalkerEventManager::RegisterBeforeAttackEvent(std::function<void(IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterBeforeAttackEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		OrbwalkerEventManager::beforeAttackHandlers.push_back(func);
+		beforeAttackHandlers.push_back(func);
+
+		return static_cast<event_id_t>(beforeAttackHandlers.size() - 1);
 	}
 
-	void OrbwalkerEventManager::RegisterAttackEvent(std::function<void(IUnit *, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func)
 	{
-		OrbwalkerEventManager::attackHandlers.push_back(func);
+		attackHandlers.push_back(func);
+
+		return static_cast<event_id_t>(attackHandlers.size() - 1);
 	}
 
-	void OrbwalkerEventManager::RegisterAfterAttackEvent(std::function<void(IUnit *, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterAfterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func)
 	{
-		OrbwalkerEventManager::afterAttackHandlers.push_back(func);
+		afterAttackHandlers.push_back(func);
+
+		return static_cast<event_id_t>(afterAttackHandlers.size() - 1);
 	}
 
-	void OrbwalkerEventManager::RegisterNewTargetEvent(std::function<void(IUnit *, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterNewTargetEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func)
 	{
-		OrbwalkerEventManager::newTargetHandlers.push_back(func);
+		newTargetHandlers.push_back(func);
+
+		return static_cast<event_id_t>(newTargetHandlers.size() - 1);
 	}
 
-	void OrbwalkerEventManager::RegisterNonKillableMinionEvent(std::function<void(IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterNonKillableMinionEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		OrbwalkerEventManager::nonKillableMinionHandlers.push_back(func);
+		nonKillableMinionHandlers.push_back(func);
+
+		return static_cast<event_id_t>(nonKillableMinionHandlers.size() - 1);
 	}
 
-	void OrbwalkerEventManager::RegisterFindTargetEvent(std::function<IUnit *()> func)
+	event_id_t OrbwalkerEventManager::RegisterFindTargetEvent(std::function<IUnit *(event_id_t)> func)
 	{
-		OrbwalkerEventManager::findTargetHandlers.push_back(func);
+		findTargetHandlers.push_back(func);
+
+		return static_cast<event_id_t>(findTargetHandlers.size() - 1);
+	}
+
+	void OrbwalkerEventManager::UnregisterBeforeAttackEvent(event_id_t id)
+	{
+		if (id < beforeAttackHandlers.size())
+		{
+			beforeAttackHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void OrbwalkerEventManager::UnregisterAttackEvent(event_id_t id)
+	{
+		if (id < attackHandlers.size())
+		{
+			attackHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void OrbwalkerEventManager::UnregisterAfterAttackEvent(event_id_t id)
+	{
+		if (id < afterAttackHandlers.size())
+		{
+			afterAttackHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void OrbwalkerEventManager::UnregisterNewTargetEvent(event_id_t id)
+	{
+		if (id < newTargetHandlers.size())
+		{
+			newTargetHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void OrbwalkerEventManager::UnregisterNonKillableMinionEvent(event_id_t id)
+	{
+		if (id < nonKillableMinionHandlers.size())
+		{
+			nonKillableMinionHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void OrbwalkerEventManager::UnregisterFindTargetEvent(event_id_t id)
+	{
+		if (id < findTargetHandlers.size())
+		{
+			findTargetHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
 	}
 
 	/**
 	* GameEventManager
 	*/
-	std::vector<std::function<void()>> GameEventManager::updateHandlers;
-	std::vector<std::function<void()>> GameEventManager::endHandlers;
-	std::vector<std::function<bool(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)>> GameEventManager::wndProcHandlers;
+	static std::vector<std::function<void(event_id_t)>> updateHandlers;
+	static std::vector<std::function<void(event_id_t)>> endHandlers;
+	static std::vector<std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)>> wndProcHandlers;
 
-	void GameEventManager::RegisterUpdateEvent(std::function<void()> func)
+	event_id_t GameEventManager::RegisterUpdateEvent(std::function<void(event_id_t)> func)
 	{
-		GameEventManager::updateHandlers.push_back(func);
+		updateHandlers.push_back(func);
+
+		return static_cast<event_id_t>(updateHandlers.size() - 1);
 	}
 
-	void GameEventManager::RegisterEndEvent(std::function<void()> func)
+	event_id_t GameEventManager::RegisterEndEvent(std::function<void(event_id_t)> func)
 	{
-		GameEventManager::endHandlers.push_back(func);
+		endHandlers.push_back(func);
+
+		return static_cast<event_id_t>(endHandlers.size() - 1);
 	}
 
-	void GameEventManager::RegisterWndProcEvent(std::function<bool(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func)
+	event_id_t GameEventManager::RegisterWndProcEvent(std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func)
 	{
-		GameEventManager::wndProcHandlers.push_back(func);
+		wndProcHandlers.push_back(func);
+
+		return static_cast<event_id_t>(wndProcHandlers.size() - 1);
+	}
+
+	void GameEventManager::UnregisterUpdateEvent(event_id_t id)
+	{
+		if (id < updateHandlers.size())
+		{
+			updateHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void GameEventManager::UnregisterEndEvent(event_id_t id)
+	{
+		if (id < endHandlers.size())
+		{
+			endHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void GameEventManager::UnregisterWndProcEvent(event_id_t id)
+	{
+		if (id < wndProcHandlers.size())
+		{
+			wndProcHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
 	}
 
 	/**
 	* DrawEventManager
 	*/
-	std::vector<std::function<void()>> DrawEventManager::renderHandlers;
-	std::vector<std::function<void()>> DrawEventManager::renderBehindHudEventHandlers;
-	std::vector<std::function<void()>> DrawEventManager::D3DPresentEventHandlers;
-	std::vector<std::function<void()>> DrawEventManager::D3DPreResetEventHandlers;
-	std::vector<std::function<void()>> DrawEventManager::D3DPostResetEventHandlers;
+	static std::vector<std::function<void(event_id_t)>> renderHandlers;
+	static std::vector<std::function<void(event_id_t)>> renderBehindHudEventHandlers;
+	static std::vector<std::function<void(event_id_t)>> D3DPresentEventHandlers;
+	static std::vector<std::function<void(event_id_t)>> D3DPreResetEventHandlers;
+	static std::vector<std::function<void(event_id_t)>> D3DPostResetEventHandlers;
 
-	void DrawEventManager::RegisterRenderEvent(std::function<void()> func)
+	event_id_t DrawEventManager::RegisterRenderEvent(std::function<void(event_id_t)> func)
 	{
-		DrawEventManager::renderHandlers.push_back(func);
+		renderHandlers.push_back(func);
+
+		return static_cast<event_id_t>(renderHandlers.size() - 1);
 	}
 
-	void DrawEventManager::RegisterRenderBehindHudEvent(std::function<void()> func)
+	event_id_t DrawEventManager::RegisterRenderBehindHudEvent(std::function<void(event_id_t)> func)
 	{
-		DrawEventManager::renderBehindHudEventHandlers.push_back(func);
+		renderBehindHudEventHandlers.push_back(func);
+
+		return static_cast<event_id_t>(renderBehindHudEventHandlers.size() - 1);
 	}
 
-	void DrawEventManager::RegisterD3DPresentEvent(std::function<void()> func)
+	event_id_t DrawEventManager::RegisterD3DPresentEvent(std::function<void(event_id_t)> func)
 	{
-		DrawEventManager::D3DPresentEventHandlers.push_back(func);
+		D3DPresentEventHandlers.push_back(func);
+
+		return static_cast<event_id_t>(D3DPresentEventHandlers.size() - 1);
 	}
 
-	void DrawEventManager::RegisterD3DPreResetEvent(std::function<void()> func)
+	event_id_t DrawEventManager::RegisterD3DPreResetEvent(std::function<void(event_id_t)> func)
 	{
-		DrawEventManager::D3DPreResetEventHandlers.push_back(func);
+		D3DPreResetEventHandlers.push_back(func);
+
+		return static_cast<event_id_t>(D3DPreResetEventHandlers.size() - 1);
 	}
 
-	void DrawEventManager::RegisterD3DPostResetEvent(std::function<void()> func)
+	event_id_t DrawEventManager::RegisterD3DPostResetEvent(std::function<void(event_id_t)> func)
 	{
-		DrawEventManager::D3DPostResetEventHandlers.push_back(func);
+		D3DPostResetEventHandlers.push_back(func);
+
+		return static_cast<event_id_t>(D3DPostResetEventHandlers.size() - 1);
+	}
+
+	void DrawEventManager::UnregisterRenderEvent(event_id_t id)
+	{
+		if (id < renderHandlers.size())
+		{
+			renderHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void DrawEventManager::UnregisterRenderBehindHudEvent(event_id_t id)
+	{
+		if (id < renderBehindHudEventHandlers.size())
+		{
+			renderBehindHudEventHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void DrawEventManager::UnregisterD3DPresentEvent(event_id_t id)
+	{
+		if (id < D3DPresentEventHandlers.size())
+		{
+			D3DPresentEventHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void DrawEventManager::UnregisterD3DPreResetEvent(event_id_t id)
+	{
+		if (id < D3DPreResetEventHandlers.size())
+		{
+			D3DPreResetEventHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void DrawEventManager::UnregisterD3DPostResetEvent(event_id_t id)
+	{
+		if (id < D3DPostResetEventHandlers.size())
+		{
+			D3DPostResetEventHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
 	}
 
 	/**
-	 * UnitEventManager
-	 */
-	std::vector<std::function<void(IUnit *)>> UnitEventManager::createHandlers;
-	std::vector<std::function<void(IUnit *)>> UnitEventManager::destroyHandlers;
-	std::vector<std::function<void(IUnit *)>> UnitEventManager::deathHandlers;
-	std::vector<std::function<bool(IUnit *, int, Vec3 *, IUnit *)>> UnitEventManager::issueOrderHandlers;
-	std::vector<std::function<bool(int, IUnit *, Vec3 *, Vec3 *)>> UnitEventManager::preCastHandlers;
-	std::vector<std::function<void(int, Vec3 *, bool *, bool *)>> UnitEventManager::updateChargedSpellHandlers;
-	std::vector<std::function<void(CastedSpell const &)>> UnitEventManager::processSpellCastHandlers;
-	std::vector<std::function<void(CastedSpell const &)>> UnitEventManager::doCastHandlers;
-	std::vector<std::function<void(InterruptibleSpell const &)>> UnitEventManager::processInterruptibleSpellHandlers;
-	std::vector<std::function<void(GapCloserSpell const &)>> UnitEventManager::processGapCloserSpellHandlers;
-	std::vector<std::function<void(IUnit *, void *)>> UnitEventManager::buffAddHandlers;
-	std::vector<std::function<void(IUnit *, void *)>> UnitEventManager::buffRemoveHandlers;
-	std::vector<std::function<void(IUnit *, int)>> UnitEventManager::levelUpHandlers;
-	std::vector<std::function<void(UnitDash *)>> UnitEventManager::dashHandlers;
-	std::vector<std::function<void(IUnit *)>> UnitEventManager::enterVisibilityHandlers;
-	std::vector<std::function<void(IUnit *)>> UnitEventManager::exitVisibilityHandlers;
-	std::vector<std::function<bool(IUnit *, std::string const)>> UnitEventManager::playAnimationHandlers;
+	* UnitEventManager
+	*/
+	static std::vector<std::function<void(event_id_t, IUnit *)>> createHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> destroyHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> deathHandlers;
+	static std::vector<std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)>> issueOrderHandlers;
+	static std::vector<std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)>> preCastHandlers;
+	static std::vector<std::function<void(event_id_t, int, Vec3 *, bool *, bool *)>> updateChargedSpellHandlers;
+	static std::vector<std::function<void(event_id_t, CastedSpell const &)>> processSpellCastHandlers;
+	static std::vector<std::function<void(event_id_t, CastedSpell const &)>> doCastHandlers;
+	static std::vector<std::function<void(event_id_t, InterruptibleSpell const &)>> processInterruptibleSpellHandlers;
+	static std::vector<std::function<void(event_id_t, GapCloserSpell const &)>> processGapCloserSpellHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, void *)>> buffAddHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, void *)>> buffRemoveHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, int)>> levelUpHandlers;
+	static std::vector<std::function<void(event_id_t, UnitDash *)>> dashHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> enterVisibilityHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> exitVisibilityHandlers;
+	static std::vector<std::function<bool(event_id_t, IUnit *, std::string const)>> playAnimationHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *)>> pauseAnimationHandlers;
 
 
-	void UnitEventManager::RegisterCreateEvent(std::function<void(IUnit *)> func)
+	event_id_t UnitEventManager::RegisterCreateEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		UnitEventManager::createHandlers.push_back(func);
+		createHandlers.push_back(func);
+
+		return static_cast<event_id_t>(createHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterDestroyEvent(std::function<void(IUnit *)> func)
+	event_id_t UnitEventManager::RegisterDestroyEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		UnitEventManager::destroyHandlers.push_back(func);
+		destroyHandlers.push_back(func);
+
+		return static_cast<event_id_t>(destroyHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterDeathEvent(std::function<void(IUnit *)> func)
+	event_id_t UnitEventManager::RegisterDeathEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		UnitEventManager::deathHandlers.push_back(func);
+		deathHandlers.push_back(func);
+
+		return static_cast<event_id_t>(deathHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterIssueOrderEvent(std::function<bool(IUnit *, int, Vec3 *, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterIssueOrderEvent(std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)> func)
 	{
-		UnitEventManager::issueOrderHandlers.push_back(func);
+		issueOrderHandlers.push_back(func);
+
+		return static_cast<event_id_t>(issueOrderHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterPreCastEvent(std::function<bool(int, IUnit *, Vec3 *, Vec3 *)> func)
+	event_id_t UnitEventManager::RegisterPreCastEvent(std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)> func)
 	{
-		UnitEventManager::preCastHandlers.push_back(func);
+		preCastHandlers.push_back(func);
+
+		return static_cast<event_id_t>(preCastHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterUpdateChargedSpellEvent(std::function<void(int, Vec3 *, bool *, bool *)> func)
+	event_id_t UnitEventManager::RegisterUpdateChargedSpellEvent(std::function<void(event_id_t, int, Vec3 *, bool *, bool *)> func)
 	{
-		UnitEventManager::updateChargedSpellHandlers.push_back(func);
+		updateChargedSpellHandlers.push_back(func);
+
+		return static_cast<event_id_t>(updateChargedSpellHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterProcessSpellCastEvent(std::function<void(CastedSpell const &)> func)
+	event_id_t UnitEventManager::RegisterProcessSpellCastEvent(std::function<void(event_id_t, CastedSpell const &)> func)
 	{
-		UnitEventManager::processSpellCastHandlers.push_back(func);
+		processSpellCastHandlers.push_back(func);
+
+		return static_cast<event_id_t>(processSpellCastHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterDoCastEvent(std::function<void(CastedSpell const &)> func)
+	event_id_t UnitEventManager::RegisterDoCastEvent(std::function<void(event_id_t, CastedSpell const &)> func)
 	{
-		UnitEventManager::doCastHandlers.push_back(func);
+		doCastHandlers.push_back(func);
+
+		return static_cast<event_id_t>(doCastHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterProcessInterruptibleSpellEvent(std::function<void(InterruptibleSpell const &)> func)
+	event_id_t UnitEventManager::RegisterProcessInterruptibleSpellEvent(std::function<void(event_id_t, InterruptibleSpell const &)> func)
 	{
-		UnitEventManager::processInterruptibleSpellHandlers.push_back(func);
+		processInterruptibleSpellHandlers.push_back(func);
+
+		return static_cast<event_id_t>(processInterruptibleSpellHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterProcessGapCloserSpellEvent(std::function<void(GapCloserSpell const &)> func)
+	event_id_t UnitEventManager::RegisterProcessGapCloserSpellEvent(std::function<void(event_id_t, GapCloserSpell const &)> func)
 	{
-		UnitEventManager::processGapCloserSpellHandlers.push_back(func);
+		processGapCloserSpellHandlers.push_back(func);
+
+		return static_cast<event_id_t>(processGapCloserSpellHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterBuffAddEvent(std::function<void(IUnit *, void *)> func)
+	event_id_t UnitEventManager::RegisterBuffAddEvent(std::function<void(event_id_t, IUnit *, void *)> func)
 	{
-		UnitEventManager::buffAddHandlers.push_back(func);
+		buffAddHandlers.push_back(func);
+
+		return static_cast<event_id_t>(buffAddHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterBuffRemoveEvent(std::function<void(IUnit *, void *)> func)
+	event_id_t UnitEventManager::RegisterBuffRemoveEvent(std::function<void(event_id_t, IUnit *, void *)> func)
 	{
-		UnitEventManager::buffRemoveHandlers.push_back(func);
+		buffRemoveHandlers.push_back(func);
+
+		return static_cast<event_id_t>(buffRemoveHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterLevelUpEvent(std::function<void(IUnit *, int)> func)
+	event_id_t UnitEventManager::RegisterLevelUpEvent(std::function<void(event_id_t, IUnit *, int)> func)
 	{
-		UnitEventManager::levelUpHandlers.push_back(func);
+		levelUpHandlers.push_back(func);
+
+		return static_cast<event_id_t>(levelUpHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterDashEvent(std::function<void(UnitDash *)> func)
+	event_id_t UnitEventManager::RegisterDashEvent(std::function<void(event_id_t, UnitDash *)> func)
 	{
-		UnitEventManager::dashHandlers.push_back(func);
+		dashHandlers.push_back(func);
+
+		return static_cast<event_id_t>(dashHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterEnterVisibilityEvent(std::function<void(IUnit *)> func)
+	event_id_t UnitEventManager::RegisterEnterVisibilityEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		UnitEventManager::enterVisibilityHandlers.push_back(func);
+		enterVisibilityHandlers.push_back(func);
+
+		return static_cast<event_id_t>(enterVisibilityHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterExitVisibilityEvent(std::function<void(IUnit *)> func)
+	event_id_t UnitEventManager::RegisterExitVisibilityEvent(std::function<void(event_id_t, IUnit *)> func)
 	{
-		UnitEventManager::exitVisibilityHandlers.push_back(func);
+		exitVisibilityHandlers.push_back(func);
+
+		return static_cast<event_id_t>(exitVisibilityHandlers.size() - 1);
 	}
 
-	void UnitEventManager::RegisterPlayAnimationEvent(std::function<bool(IUnit*, std::string const)> func)
+	event_id_t UnitEventManager::RegisterPlayAnimationEvent(std::function<bool(event_id_t, IUnit *, std::string const)> func)
 	{
-		UnitEventManager::playAnimationHandlers.push_back(func);
+		playAnimationHandlers.push_back(func);
+
+		return static_cast<event_id_t>(playAnimationHandlers.size() - 1);
+	}
+
+	event_id_t UnitEventManager::RegisterPauseAnimationEvent(std::function<void(event_id_t, IUnit *)> func)
+	{
+		pauseAnimationHandlers.push_back(func);
+
+		return static_cast<event_id_t>(pauseAnimationHandlers.size() - 1);
+	}
+
+	void UnitEventManager::UnregisterCreateEvent(event_id_t id)
+	{
+		if (id < createHandlers.size())
+		{
+			createHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterDestroyEvent(event_id_t id)
+	{
+		if (id < destroyHandlers.size())
+		{
+			destroyHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterDeathEvent(event_id_t id)
+	{
+		if (id < deathHandlers.size())
+		{
+			deathHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterIssueOrderEvent(event_id_t id)
+	{
+		if (id < issueOrderHandlers.size())
+		{
+			issueOrderHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterPreCastEvent(event_id_t id)
+	{
+		if (id < preCastHandlers.size())
+		{
+			preCastHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterUpdateChargedSpellEvent(event_id_t id)
+	{
+		if (id < updateChargedSpellHandlers.size())
+		{
+			updateChargedSpellHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterProcessSpellCastEvent(event_id_t id)
+	{
+		if (id < processSpellCastHandlers.size())
+		{
+			processSpellCastHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterDoCastEvent(event_id_t id)
+	{
+		if (id < doCastHandlers.size())
+		{
+			doCastHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterProcessInterruptibleSpellEvent(event_id_t id)
+	{
+		if (id < processInterruptibleSpellHandlers.size())
+		{
+			processInterruptibleSpellHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterProcessGapCloserSpellEvent(event_id_t id)
+	{
+		if (id < processGapCloserSpellHandlers.size())
+		{
+			processGapCloserSpellHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterBuffAddEvent(event_id_t id)
+	{
+		if (id < buffAddHandlers.size())
+		{
+			buffAddHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterBuffRemoveEvent(event_id_t id)
+	{
+		if (id < buffRemoveHandlers.size())
+		{
+			buffRemoveHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterLevelUpEvent(event_id_t id)
+	{
+		if (id < levelUpHandlers.size())
+		{
+			levelUpHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterDashEvent(event_id_t id)
+	{
+		if (id < dashHandlers.size())
+		{
+			dashHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterEnterVisibilityEvent(event_id_t id)
+	{
+		if (id < enterVisibilityHandlers.size())
+		{
+			enterVisibilityHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterExitVisibilityEvent(event_id_t id)
+	{
+		if (id < exitVisibilityHandlers.size())
+		{
+			exitVisibilityHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterPlayAnimationEvent(event_id_t id)
+	{
+		if (id < playAnimationHandlers.size())
+		{
+			playAnimationHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterPauseAnimationEvent(event_id_t id)
+	{
+		if (id < pauseAnimationHandlers.size())
+		{
+			pauseAnimationHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
 	}
 
 	PLUGIN_EVENT(void) OnOrbwalkBeforeAttack(IUnit *target)
 	{
-		for (auto function : OrbwalkerEventManager::beforeAttackHandlers)
+		for (event_id_t i = 0; i < beforeAttackHandlers.size(); i++)
 		{
-			function(target);
+			if (beforeAttackHandlers[i] != nullptr)
+			{
+				beforeAttackHandlers[i](i, target);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnOrbwalkAttack(IUnit *source, IUnit *target)
 	{
-		for (auto function : OrbwalkerEventManager::attackHandlers)
+		for (event_id_t i = 0; i < attackHandlers.size(); i++)
 		{
-			function(source, target);
+			if (attackHandlers[i] != nullptr)
+			{
+				attackHandlers[i](i, source, target);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnOrbwalkAfterAttack(IUnit *source, IUnit *target)
 	{
-		for (auto function : OrbwalkerEventManager::afterAttackHandlers)
+		for (event_id_t i = 0; i < afterAttackHandlers.size(); i++)
 		{
-			function(source, target);
+			if (afterAttackHandlers[i] != nullptr)
+			{
+				afterAttackHandlers[i](i, source, target);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnOrbwalkTargetChange(IUnit *oldTarget, IUnit *newTarget)
 	{
-		for (auto function : OrbwalkerEventManager::newTargetHandlers)
+		for (event_id_t i = 0; i < newTargetHandlers.size(); i++)
 		{
-			function(oldTarget, newTarget);
+			if (newTargetHandlers[i] != nullptr)
+			{
+				newTargetHandlers[i](i, oldTarget, newTarget);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnOrbwalkOrbwalkNonKillableMinion(IUnit *nonKillableMinion)
 	{
-		for (auto function : OrbwalkerEventManager::nonKillableMinionHandlers)
+		for (event_id_t i = 0; i < nonKillableMinionHandlers.size(); i++)
 		{
-			function(nonKillableMinion);
+			if (nonKillableMinionHandlers[i] != nullptr)
+			{
+				nonKillableMinionHandlers[i](i, nonKillableMinion);
+			}
 		}
 	}
 
@@ -249,13 +591,16 @@ namespace eventmanager
 	{
 		IUnit *target = nullptr;
 
-		for (auto function : OrbwalkerEventManager::findTargetHandlers)
+		for (event_id_t i = 0; i < findTargetHandlers.size(); i++)
 		{
-			auto ret = function();
-
-			if (ret != nullptr && target == nullptr)
+			if (findTargetHandlers[i] != nullptr)
 			{
-				target = nullptr;
+				auto ret = findTargetHandlers[i](i);
+
+				if (ret != nullptr && target == nullptr)
+				{
+					target = nullptr;
+				}
 			}
 		}
 
@@ -264,17 +609,23 @@ namespace eventmanager
 
 	PLUGIN_EVENT(void) OnGameUpdate()
 	{
-		for (auto function : GameEventManager::updateHandlers)
+		for (event_id_t i = 0; i < updateHandlers.size(); i++)
 		{
-			function();
+			if (updateHandlers[i] != nullptr)
+			{
+				updateHandlers[i](i);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnGameEnd()
 	{
-		for (auto function : GameEventManager::endHandlers)
+		for (event_id_t i = 0; i < endHandlers.size(); i++)
 		{
-			function();
+			if (endHandlers[i] != nullptr)
+			{
+				endHandlers[i](i);
+			}
 		}
 	}
 
@@ -282,13 +633,16 @@ namespace eventmanager
 	{
 		auto ret = true;
 
-		for (auto function : GameEventManager::wndProcHandlers)
+		for (event_id_t i = 0; i < wndProcHandlers.size(); i++)
 		{
-			auto r = function(wnd, message, wParam, lParam);
-
-			if (!r && ret)
+			if (wndProcHandlers[i] != nullptr)
 			{
-				ret = false;
+				auto r = wndProcHandlers[i](i, wnd, message, wParam, lParam);
+
+				if (!r && ret)
+				{
+					ret = false;
+				}
 			}
 		}
 
@@ -297,65 +651,89 @@ namespace eventmanager
 
 	PLUGIN_EVENT(void) OnDrawRender()
 	{
-		for (auto function : DrawEventManager::renderHandlers)
+		for (event_id_t i = 0; i < renderHandlers.size(); i++)
 		{
-			function();
+			if (renderHandlers[i] != nullptr)
+			{
+				renderHandlers[i](i);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnDrawRenderBehindHud()
 	{
-		for (auto function : DrawEventManager::renderBehindHudEventHandlers)
+		for (event_id_t i = 0; i < renderBehindHudEventHandlers.size(); i++)
 		{
-			function();
+			if (renderBehindHudEventHandlers[i] != nullptr)
+			{
+				renderBehindHudEventHandlers[i](i);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnDrawRenderD3DPresent()
 	{
-		for (auto function : DrawEventManager::D3DPresentEventHandlers)
+		for (event_id_t i = 0; i < D3DPresentEventHandlers.size(); i++)
 		{
-			function();
+			if (D3DPresentEventHandlers[i] != nullptr)
+			{
+				D3DPresentEventHandlers[i](i);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnDrawRenderD3DPreReset()
 	{
-		for (auto function : DrawEventManager::D3DPreResetEventHandlers)
+		for (event_id_t i = 0; i < D3DPreResetEventHandlers.size(); i++)
 		{
-			function();
+			if (D3DPreResetEventHandlers[i] != nullptr)
+			{
+				D3DPreResetEventHandlers[i](i);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnDrawRenderD3DPostReset()
 	{
-		for (auto function : DrawEventManager::D3DPostResetEventHandlers)
+		for (event_id_t i = 0; i < D3DPostResetEventHandlers.size(); i++)
 		{
-			function();
+			if (D3DPostResetEventHandlers[i] != nullptr)
+			{
+				D3DPostResetEventHandlers[i](i);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitCreate(IUnit *unit)
 	{
-		for (auto function : UnitEventManager::createHandlers)
+		for (event_id_t i = 0; i < createHandlers.size(); i++)
 		{
-			function(unit);
+			if (createHandlers[i] != nullptr)
+			{
+				createHandlers[i](i, unit);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitDestroy(IUnit *unit)
 	{
-		for (auto function : UnitEventManager::destroyHandlers)
+		for (event_id_t i = 0; i < destroyHandlers.size(); i++)
 		{
-			function(unit);
+			if (destroyHandlers[i] != nullptr)
+			{
+				destroyHandlers[i](i, unit);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitDeath(IUnit *unit)
 	{
-		for (auto function : UnitEventManager::deathHandlers)
+		for (event_id_t i = 0; i < deathHandlers.size(); i++)
 		{
-			function(unit);
+			if (deathHandlers[i] != nullptr)
+			{
+				deathHandlers[i](i, unit);
+			}
 		}
 	}
 
@@ -363,13 +741,16 @@ namespace eventmanager
 	{
 		auto process = true;
 
-		for (auto function : UnitEventManager::issueOrderHandlers)
+		for (event_id_t i = 0; i < issueOrderHandlers.size(); i++)
 		{
-			auto ret = function(source, orderId, pos, target);
-
-			if (!ret && process)
+			if (issueOrderHandlers[i] != nullptr)
 			{
-				process = false;
+				auto ret = issueOrderHandlers[i](i, source, orderId, pos, target);
+
+				if (!ret && process)
+				{
+					process = false;
+				}
 			}
 		}
 
@@ -380,13 +761,16 @@ namespace eventmanager
 	{
 		auto process = true;
 
-		for (auto function : UnitEventManager::preCastHandlers)
+		for (event_id_t i = 0; i < preCastHandlers.size(); i++)
 		{
-			auto ret = function(slot, target, start, end);
-
-			if (!ret && process)
+			if (preCastHandlers[i] != nullptr)
 			{
-				process = false;
+				auto ret = preCastHandlers[i](i, slot, target, start, end);
+
+				if (!ret && process)
+				{
+					process = false;
+				}
 			}
 		}
 
@@ -395,89 +779,122 @@ namespace eventmanager
 
 	PLUGIN_EVENT(void) OnUnitUpdateChargedSpell(int slot, Vec3 *position, bool *releaseCast, bool *triggerEvent)
 	{
-		for (auto function : UnitEventManager::updateChargedSpellHandlers)
+		for (event_id_t i = 0; i < updateChargedSpellHandlers.size(); i++)
 		{
-			function(slot, position, releaseCast, triggerEvent);
+			if (updateChargedSpellHandlers[i] != nullptr)
+			{
+				updateChargedSpellHandlers[i](i, slot, position, releaseCast, triggerEvent);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitProcessSpellCast(CastedSpell const &spell)
 	{
-		for (auto function : UnitEventManager::processSpellCastHandlers)
+		for (event_id_t i = 0; i < processSpellCastHandlers.size(); i++)
 		{
-			function(spell);
+			if (processSpellCastHandlers[i] != nullptr)
+			{
+				processSpellCastHandlers[i](i, spell);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitDoCast(CastedSpell const &spell)
 	{
-		for (auto function : UnitEventManager::doCastHandlers)
+		for (event_id_t i = 0; i < doCastHandlers.size(); i++)
 		{
-			function(spell);
+			if (doCastHandlers[i] != nullptr)
+			{
+				doCastHandlers[i](i, spell);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitProcessInterruptableSpellCast(InterruptibleSpell const &spell)
 	{
-		for (auto function : UnitEventManager::processInterruptibleSpellHandlers)
+		for (event_id_t i = 0; i < processInterruptibleSpellHandlers.size(); i++)
 		{
-			function(spell);
+			if (processInterruptibleSpellHandlers[i] != nullptr)
+			{
+				processInterruptibleSpellHandlers[i](i, spell);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitProcessGapCloserSpellCast(GapCloserSpell const &spell)
 	{
-		for (auto function : UnitEventManager::processGapCloserSpellHandlers)
+		for (event_id_t i = 0; i < processGapCloserSpellHandlers.size(); i++)
 		{
-			function(spell);
+			if (processGapCloserSpellHandlers[i] != nullptr)
+			{
+				processGapCloserSpellHandlers[i](i, spell);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitBuffAdd(IUnit *source, void *buffData)
 	{
-		for (auto function : UnitEventManager::buffAddHandlers)
+		for (event_id_t i = 0; i < buffAddHandlers.size(); i++)
 		{
-			function(source, buffData);
+			if (buffAddHandlers[i] != nullptr)
+			{
+				buffAddHandlers[i](i, source, buffData);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitBuffRemove(IUnit *source, void *buffData)
 	{
-		for (auto function : UnitEventManager::buffRemoveHandlers)
+		for (event_id_t i = 0; i < buffRemoveHandlers.size(); i++)
 		{
-			function(source, buffData);
+			if (buffRemoveHandlers[i] != nullptr)
+			{
+				buffRemoveHandlers[i](i, source, buffData);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitLevelUp(IUnit *source, int newLevel)
 	{
-		for (auto function : UnitEventManager::levelUpHandlers)
+		for (event_id_t i = 0; i < levelUpHandlers.size(); i++)
 		{
-			function(source, newLevel);
+			if (levelUpHandlers[i] != nullptr)
+			{
+				levelUpHandlers[i](i, source, newLevel);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitDash(UnitDash *dashArgs)
 	{
-		for (auto function : UnitEventManager::dashHandlers)
+		for (event_id_t i = 0; i < dashHandlers.size(); i++)
 		{
-			function(dashArgs);
+			if (dashHandlers[i] != nullptr)
+			{
+				dashHandlers[i](i, dashArgs);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitEnterVisibility(IUnit *unit)
 	{
-		for (auto function : UnitEventManager::enterVisibilityHandlers)
+		for (event_id_t i = 0; i < enterVisibilityHandlers.size(); i++)
 		{
-			function(unit);
+			if (enterVisibilityHandlers[i] != nullptr)
+			{
+				enterVisibilityHandlers[i](i, unit);
+			}
 		}
 	}
 
 	PLUGIN_EVENT(void) OnUnitExitVisibility(IUnit *unit)
 	{
-		for (auto function : UnitEventManager::exitVisibilityHandlers)
+		for (event_id_t i = 0; i < exitVisibilityHandlers.size(); i++)
 		{
-			function(unit);
+			if (exitVisibilityHandlers[i] != nullptr)
+			{
+				exitVisibilityHandlers[i](i, unit);
+			}
 		}
 	}
 
@@ -485,17 +902,31 @@ namespace eventmanager
 	{
 		auto process = true;
 
-		for (auto function : UnitEventManager::playAnimationHandlers)
+		for (event_id_t i = 0; i < playAnimationHandlers.size(); i++)
 		{
-			auto ret = function(source, animationId);
-
-			if (!ret && process)
+			if (playAnimationHandlers[i] != nullptr)
 			{
-				process = false;
+				auto ret = playAnimationHandlers[i](i, source, animationId);
+
+				if (!ret && process)
+				{
+					process = false;
+				}
 			}
 		}
 
 		return process;
+	}
+
+	PLUGIN_EVENT(void) OnUnitPauseAnimation(IUnit *source)
+	{
+		for (event_id_t i = 0; i < pauseAnimationHandlers.size(); i++)
+		{
+			if (pauseAnimationHandlers[i] != nullptr)
+			{
+				pauseAnimationHandlers[i](i, source);
+			}
+		}
 	}
 
 	void RegisterEvents(IEventManager *eventManager)
@@ -538,6 +969,7 @@ namespace eventmanager
 		eventManager->AddEventHandler(kEventOnEnterVisible, OnUnitEnterVisibility);
 		eventManager->AddEventHandler(kEventOnExitVisible, OnUnitExitVisibility);
 		eventManager->AddEventHandler(kEventOnPlayAnimation, OnUnitPlayAnimation);
+		eventManager->AddEventHandler(kEventOnPauseAnimation, OnUnitPauseAnimation);
 	}
 
 	void UnregisterEvents(IEventManager *eventManager)
@@ -580,5 +1012,6 @@ namespace eventmanager
 		eventManager->RemoveEventHandler(kEventOnEnterVisible, OnUnitEnterVisibility);
 		eventManager->RemoveEventHandler(kEventOnExitVisible, OnUnitExitVisibility);
 		eventManager->RemoveEventHandler(kEventOnPlayAnimation, OnUnitPlayAnimation);
+		eventManager->RemoveEventHandler(kEventOnPauseAnimation, OnUnitPauseAnimation);
 	}
 }

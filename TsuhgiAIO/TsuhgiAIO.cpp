@@ -12,15 +12,24 @@ TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
 	std::string champName = player->ChampionName();
 	boost::algorithm::to_lower(champName);
 
+//	if (champName == "ezreal")
+//	{
+//		this->ezreal();
+//	}
 	if (champName == "lucian")
 	{
 		this->lucian();
 	}
 }
 
+void TsuhgiAIO::ezreal()
+{
+}
+
 void TsuhgiAIO::lucian()
 {
 	this->menu = this->sdk->AddMenu("Lucian");
+
 	static auto comboMenu = this->menu->AddMenu("Combo Settings");
 	static auto useQCombo = comboMenu->CheckBox("Use Q", true);
 	static auto useWCombo = comboMenu->CheckBox("Use W", true);
@@ -30,13 +39,21 @@ void TsuhgiAIO::lucian()
 	static auto useQHarass = harassMenu->CheckBox("Use Q", true);
 	static auto useWHarass = harassMenu->CheckBox("Use W", true);
 	static auto useEHarass = harassMenu->CheckBox("Use E", true);
-	static auto minManaHarass = harassMenu->AddFloat("Min Mana", 0.f, 100.f, 30.f);
 
+	static auto laneClearMenu = this->menu->AddMenu("Lane Clear Settings");
+	static auto useQLaneClear = laneClearMenu->CheckBox("Use Q", false);
+	static auto minQCountLaneClear = laneClearMenu->AddInteger("Min Q Count", 1, 5, 3);
+
+	static auto jungleClearMenu = this->menu->AddMenu("Jungle Clear Settings");
+	static auto useQJungleClear = jungleClearMenu->CheckBox("Use Q", true);
+	static auto useWJungleClear = jungleClearMenu->CheckBox("Use W", true);
+	static auto useEJungleClear = jungleClearMenu->CheckBox("Use E", true);
+
+	static auto minManaHarass = harassMenu->AddFloat("Min Mana", 0.f, 100.f, 30.f);
 	static auto miscMenu = this->menu->AddMenu("Misc Settings");
 	static auto useQAutoHarass = miscMenu->CheckBox("Auto Extended Q", true);
 	static auto minManaQAutoHarass = miscMenu->AddFloat("Min Mana For Extended Q", 0.f, 100.f, 30.f);
 	static auto eMode = comboMenu->AddInteger("E position (0 = side, 1 = mouse, 2 = target) ", 0, 2, 0);
-
 
 	static auto game = this->sdk->GetGame();
 	static auto entityList = this->sdk->GetEntityList();
@@ -69,7 +86,7 @@ void TsuhgiAIO::lucian()
 		return Vec2((diff.x * cos(rads) - diff.y * sin(rads)) / 4.f, (diff.x * sin(rads) + diff.y * cos(rads)) / 4.f) + p1;
 	};
 
-	eventmanager::GameEventManager::RegisterUpdateEvent([&]() -> void {
+	eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void {
 		auto mode = orbwalking->GetOrbwalkingMode();
 
 		if ((mode == kModeCombo && useQCombo->Enabled())
@@ -92,20 +109,15 @@ void TsuhgiAIO::lucian()
 					Vec3 predictedPos;
 					prediction->GetFutureUnitPosition(target, qDelay, true, predictedPos);
 					auto targetPos = LPPUtils::Extend(myPos, predictedPos, extendedRange);
-					auto targetPos2D = Vec2(targetPos.x, targetPos.z);
 
 					for (auto minion : entityList->GetAllMinions(false, true, true))
 					{
-						if (player->IsValidTarget(minion, range))
+						if (player->IsValidTarget(minion, range) && !minion->IsWard())
 						{
 							auto minionPos = minion->GetPosition();
 							auto pos = LPPUtils::Extend(myPos, minionPos, extendedRange);
 
-							auto extendedPos2D = Vec2(pos.x, pos.z);
-
-							auto distance = (targetPos2D - extendedPos2D).Length();
-
-							if (distance <= extendedQ->Radius())
+							if ((targetPos - pos).Length2D() <= extendedQ->Radius())
 							{
 								q->CastOnUnit(minion);
 							}
@@ -114,9 +126,53 @@ void TsuhgiAIO::lucian()
 				}
 			}
 		}
+
+		if (mode == kModeLaneClear && useQLaneClear->Enabled())
+		{
+			auto minQCount = minQCountLaneClear->GetInteger();
+
+			if (minQCount > 0)
+			{
+				auto range = q->Range();
+				auto extendedRange = extendedQ->Range();
+				auto myPos = player->GetPosition();
+				auto qRadius = extendedQ->Radius();
+
+				auto enemyMinions = entityList->GetAllMinions(false, true, false);
+
+				for (auto minion : enemyMinions)
+				{
+					if (player->IsValidTarget(minion, range) && minion->IsCreep())
+					{
+						auto minionPos = minion->GetPosition();
+						auto pos = LPPUtils::Extend(myPos, minionPos, extendedRange);
+
+						auto networkId = minion->GetNetworkId();
+
+						auto count = std::count_if(enemyMinions.begin(), enemyMinions.end(),
+							[&](IUnit *unit) -> bool {
+							if (player->IsValidTarget(unit, extendedRange) && unit->IsCreep() && unit->GetNetworkId() != networkId)
+							{
+								auto targetPos = LPPUtils::Extend(myPos, unit->GetPosition(), extendedRange);
+
+								return (pos - targetPos).Length2D() <= qRadius;
+							}
+
+							return false;
+						}) + 1;
+
+						if (count >= minQCount)
+						{
+							q->CastOnUnit(minion);
+							break;
+						}
+					}
+				}
+			}
+		}
 	});
 
-	eventmanager::UnitEventManager::RegisterDoCastEvent([&](CastedSpell const &spell) -> void {
+	eventmanager::UnitEventManager::RegisterDoCastEvent([&](event_id_t id, CastedSpell const &spell) -> void {
 		if (spellDataReader->IsAutoAttack(spell.Data_)
 			&& spellDataReader->GetCaster(spell.Data_)->GetNetworkId() == player->GetNetworkId())
 		{
@@ -140,11 +196,11 @@ void TsuhgiAIO::lucian()
 						}
 						else if (m == 1)
 						{
-							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
+							pos = game->CursorPosition();
 						}
 						else
 						{
-							pos = game->CursorPosition();
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 
 						e->CastOnPosition(pos);
@@ -155,7 +211,7 @@ void TsuhgiAIO::lucian()
 
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
-							q->CastOnUnit(target);
+							q->CastOnUnit(qTarget);
 						}
 					}
 					else if (w->IsReady() && useWCombo->Enabled())
@@ -187,11 +243,11 @@ void TsuhgiAIO::lucian()
 						}
 						else if (m == 1)
 						{
-							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
+							pos = game->CursorPosition();
 						}
 						else
 						{
-							pos = game->CursorPosition();
+							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 
 						e->CastOnPosition(pos);
@@ -202,7 +258,7 @@ void TsuhgiAIO::lucian()
 
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
-							q->CastOnUnit(target);
+							q->CastOnUnit(qTarget);
 						}
 					}
 					else if (w->IsReady() && useWHarass->Enabled())
@@ -213,6 +269,26 @@ void TsuhgiAIO::lucian()
 						{
 							w->CastOnTarget(wTarget);
 						}
+					}
+				}
+			}
+			else if (mode == kModeLaneClear && player->ManaPercent() >= minManaHarass->GetFloat())
+			{
+				auto target = spellDataReader->GetTarget(spell.Data_);
+
+				if (target != nullptr && target->IsJungleCreep() && target->IsValidTarget() && damage->GetAutoAttackDamage(player, target, true) < target->GetHealth())
+				{
+					if (e->IsReady() && useEJungleClear->Enabled())
+					{
+						e->CastOnPosition(LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65)));
+					}
+					else if (q->IsReady() && useQJungleClear->Enabled())
+					{
+						q->CastOnUnit(target);
+					}
+					else if (w->IsReady() && useWJungleClear->Enabled())
+					{
+						w->CastOnTarget(target);
 					}
 				}
 			}
