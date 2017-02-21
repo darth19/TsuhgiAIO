@@ -203,7 +203,11 @@ void TsuhgiAIO::lucian()
 							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 
-						e->CastOnPosition(pos);
+						LPPUtils::RepeatUntil(this->sdk, [&, pos]() -> void {
+							e->CastOnPosition(pos);
+						}, [&]() -> bool {
+							return !e->IsReady();
+						}, 25);
 					}
 					else if (q->IsReady() && useQCombo->Enabled())
 					{
@@ -211,7 +215,11 @@ void TsuhgiAIO::lucian()
 
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
-							q->CastOnUnit(qTarget);
+							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
+								q->CastOnUnit(qTarget);
+							}, [&]() -> bool {
+								return !q->IsReady();
+							}, 25);
 						}
 					}
 					else if (w->IsReady() && useWCombo->Enabled())
@@ -220,7 +228,11 @@ void TsuhgiAIO::lucian()
 
 						if (wTarget != nullptr && wTarget->IsValidTarget())
 						{
-							w->CastOnTarget(wTarget);
+							LPPUtils::RepeatUntil(this->sdk, [&, wTarget]() -> void {
+								w->CastOnTarget(wTarget);
+							}, [&]() -> bool {
+								return !w->IsReady();
+							}, 25);
 						}
 					}
 				}
@@ -250,7 +262,11 @@ void TsuhgiAIO::lucian()
 							pos = LPPUtils::Extend(player->GetPosition(), target->GetPosition(), 50.f);
 						}
 
-						e->CastOnPosition(pos);
+						LPPUtils::RepeatUntil(this->sdk, [&, pos]() -> void {
+							e->CastOnPosition(pos);
+						}, [&]() -> bool {
+							return !e->IsReady();
+						}, 25);
 					}
 					else if (q->IsReady() && useQHarass->Enabled())
 					{
@@ -258,7 +274,11 @@ void TsuhgiAIO::lucian()
 
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
-							q->CastOnUnit(qTarget);
+							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
+								q->CastOnUnit(qTarget);
+							}, [&]() -> bool {
+								return !q->IsReady();
+							}, 25);
 						}
 					}
 					else if (w->IsReady() && useWHarass->Enabled())
@@ -267,7 +287,11 @@ void TsuhgiAIO::lucian()
 
 						if (wTarget != nullptr && wTarget->IsValidTarget())
 						{
-							w->CastOnTarget(wTarget);
+							LPPUtils::RepeatUntil(this->sdk, [&, wTarget]() -> void {
+								w->CastOnTarget(wTarget);
+							}, [&]() -> bool {
+								return !w->IsReady();
+							}, 25);
 						}
 					}
 				}
@@ -280,15 +304,28 @@ void TsuhgiAIO::lucian()
 				{
 					if (e->IsReady() && useEJungleClear->Enabled())
 					{
-						e->CastOnPosition(LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65)));
+						auto pos = LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65));
+						LPPUtils::RepeatUntil(this->sdk, [&, pos]() -> void {
+							e->CastOnPosition(pos);
+						}, [&]() -> bool {
+							return !e->IsReady();
+						}, 25);
 					}
 					else if (q->IsReady() && useQJungleClear->Enabled())
 					{
-						q->CastOnUnit(target);
+						LPPUtils::RepeatUntil(this->sdk, [&, target]() -> void {
+							q->CastOnUnit(target);
+						}, [&]() -> bool {
+							return !q->IsReady();
+						}, 25);
 					}
 					else if (w->IsReady() && useWJungleClear->Enabled())
 					{
-						w->CastOnTarget(target);
+						LPPUtils::RepeatUntil(this->sdk, [&, target]() -> void {
+							w->CastOnTarget(target);
+						}, [&]() -> bool {
+							return !w->IsReady();
+						}, 25);
 					}
 				}
 			}
