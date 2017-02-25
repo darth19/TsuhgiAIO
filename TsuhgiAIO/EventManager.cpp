@@ -109,6 +109,7 @@ namespace eventmanager
 	static std::vector<std::function<void(event_id_t)>> updateHandlers;
 	static std::vector<std::function<void(event_id_t)>> endHandlers;
 	static std::vector<std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)>> wndProcHandlers;
+	static std::vector<std::function<void(event_id_t, JungleNotifyData *)>> jungleNotifyHandlers;
 
 	event_id_t GameEventManager::RegisterUpdateEvent(std::function<void(event_id_t)> func)
 	{
@@ -129,6 +130,13 @@ namespace eventmanager
 		wndProcHandlers.push_back(func);
 
 		return static_cast<event_id_t>(wndProcHandlers.size() - 1);
+	}
+
+	event_id_t GameEventManager::RegisterJungleNotifyEvent(std::function<void(event_id_t, JungleNotifyData *)> func)
+	{
+		jungleNotifyHandlers.push_back(func);
+
+		return static_cast<event_id_t>(jungleNotifyHandlers.size() - 1);
 	}
 
 	void GameEventManager::UnregisterUpdateEvent(event_id_t id)
@@ -152,6 +160,14 @@ namespace eventmanager
 		if (id < wndProcHandlers.size())
 		{
 			wndProcHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void GameEventManager::UnregisterJungleNotifyEvent(event_id_t id)
+	{
+		if (id < jungleNotifyHandlers.size())
+		{
+			jungleNotifyHandlers[static_cast<unsigned int>(id)] = nullptr;
 		}
 	}
 
@@ -649,6 +665,17 @@ namespace eventmanager
 		return ret;
 	}
 
+	PLUGIN_EVENT(void) OnJungleNotify(JungleNotifyData *args)
+	{
+		for (event_id_t i = 0; i < jungleNotifyHandlers.size(); i++)
+		{
+			if (jungleNotifyHandlers[i] != nullptr)
+			{
+				jungleNotifyHandlers[i](i, args);
+			}
+		}
+	}
+
 	PLUGIN_EVENT(void) OnDrawRender()
 	{
 		for (event_id_t i = 0; i < renderHandlers.size(); i++)
@@ -943,6 +970,7 @@ namespace eventmanager
 		eventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 		eventManager->AddEventHandler(kEventOnGameEnd, OnGameEnd);
 		eventManager->AddEventHandler(kEventOnWndProc, OnGameWndProc);
+		eventManager->AddEventHandler(kEventOnJungleNotification, OnJungleNotify);
 
 		//Draw Events
 		eventManager->AddEventHandler(kEventOnRender, OnDrawRender);
@@ -986,6 +1014,7 @@ namespace eventmanager
 		eventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 		eventManager->RemoveEventHandler(kEventOnGameEnd, OnGameEnd);
 		eventManager->RemoveEventHandler(kEventOnWndProc, OnGameWndProc);
+		eventManager->RemoveEventHandler(kEventOnJungleNotification, OnJungleNotify);
 
 		//Draw Events
 		eventManager->RemoveEventHandler(kEventOnRender, OnDrawRender);

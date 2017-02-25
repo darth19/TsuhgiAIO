@@ -1,6 +1,5 @@
 #pragma once
 #include "PluginSDK.h"
-#include <boost/algorithm/string.hpp>
 
 #define M_PI 3.14159265358979323846
 
@@ -60,33 +59,6 @@ public:
 		}
 
 		return count;
-	}
-
-	static bool InFountain(IUnit *unit)
-	{
-		//TODO: Implement
-		return unit->HasBuff("kappachino");
-	}
-
-	static bool IsTeleporting(IUnit *unit, IPluginSDK *sdk)
-	{
-		static auto buffReader = sdk->GetBuffDataReader();
-
-		std::vector<void *> dataVector;
-		unit->GetAllBuffsData(dataVector);
-
-		for (auto data: dataVector)
-		{
-			auto name = std::string(buffReader->GetBuffName(data));
-			boost::algorithm::to_lower(name);
-
-			if (name.find("recall") != std::string::npos || name.find("teleport") != std::string::npos)
-			{
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	static Vec2 To2D(Vec3 vec)

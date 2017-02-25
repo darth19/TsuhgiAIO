@@ -33,10 +33,12 @@ namespace eventmanager {
 		static event_id_t RegisterUpdateEvent(std::function<void(event_id_t)> func);
 		static event_id_t RegisterEndEvent(std::function<void(event_id_t)> func);
 		static event_id_t RegisterWndProcEvent(std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func);
+		static event_id_t RegisterJungleNotifyEvent(std::function<void(event_id_t, JungleNotifyData *)> func);
 
 		static void UnregisterUpdateEvent(event_id_t id);
 		static void UnregisterEndEvent(event_id_t id);
 		static void UnregisterWndProcEvent(event_id_t id);
+		static void UnregisterJungleNotifyEvent(event_id_t id);
 
 	private:
 		GameEventManager() {}

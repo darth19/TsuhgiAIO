@@ -1,7 +1,7 @@
 #include "TsuhgiAIO.h"
-#include <boost/algorithm/string.hpp>
 #include "EventManager.h"
 #include "lpputils.h"
+#include <algorithm>
 
 
 TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
@@ -10,13 +10,12 @@ TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
 	auto player = sdk->GetEntityList()->Player();
 
 	std::string champName = player->ChampionName();
-	boost::algorithm::to_lower(champName);
 
-//	if (champName == "ezreal")
-//	{
-//		this->ezreal();
-//	}
-	if (champName == "lucian")
+	if (champName == "Ezreal")
+	{
+		this->ezreal();
+	}
+	if (champName == "Lucian")
 	{
 		this->lucian();
 	}
@@ -24,6 +23,219 @@ TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
 
 void TsuhgiAIO::ezreal()
 {
+	this->menu = this->sdk->AddMenu("Ezreal");
+	static auto comboMenu = this->menu->AddMenu("Combo Options");
+	static auto useQCombo = comboMenu->CheckBox("Use Q", true);
+	static auto useWCombo = comboMenu->CheckBox("Use W", true);
+
+	static auto harassMenu = this->menu->AddMenu("Harass Options");
+	static auto useQHarass = harassMenu->CheckBox("Use Q", true);
+	static auto useWHarass = harassMenu->CheckBox("Use W", true);
+
+	static auto miscMenu = this->menu->AddMenu("Misc Options");
+	static auto ksQ = miscMenu->CheckBox("KS with Q", true);
+	static auto useUlt = miscMenu->AddKey("Use Ult", 'V');
+
+	static auto drawMenu = this->menu->AddMenu("Draw Options");
+	static auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
+	static auto qRangeColor = drawMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
+	static auto drawWRange = drawMenu->CheckBox("Draw W Range", false);
+	static auto wRangeColor = drawMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
+
+	static auto game = this->sdk->GetGame();
+	static auto entityList = this->sdk->GetEntityList();
+	static auto player = entityList->Player();
+	static auto orbwalking = this->sdk->GetOrbwalking();
+	static auto spellDataReader = this->sdk->GetSpellDataReader();
+	static auto damageCalc = this->sdk->GetDamage();
+	static auto renderer = this->sdk->GetRenderer();
+
+	static auto q = this->sdk->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithMinions | kCollidesWithYasuoWall));
+	q->SetSkillshot(0.25f, 60.f, 2000.f, 1200.f);
+
+	static auto w = this->sdk->CreateSpell2(kSlotW, kLineCast, true, true, kCollidesWithYasuoWall);
+	w->SetSkillshot(0.25f, 80.f, 1600.f, 800.f);
+
+	static auto e = this->sdk->CreateSpell2(kSlotE, kLineCast, false, false, kCollidesWithNothing);
+	e->SetOverrideRange(475.f);
+
+	static auto r = this->sdk->CreateSpell2(kSlotR, kLineCast, true, true, kCollidesWithYasuoWall);
+	r->SetSkillshot(1.0f, 160.f, 2000.f, FLT_MAX);
+
+	eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void {
+		auto mode = orbwalking->GetOrbwalkingMode();
+
+		if (mode == kModeCombo)
+		{
+			if (useQCombo->Enabled() && q->IsReady() && orbwalking->CanMove())
+			{
+				auto target = this->findTarget(q->Range(), PhysicalDamage);
+
+				if (target != nullptr && target->IsValidTarget())
+				{
+					q->CastOnTarget(target);
+				}
+			}
+
+			if (useWCombo->Enabled() && w->IsReady() && orbwalking->CanMove(w->GetDelay()) && LPPUtils::CountEnemiesInAttackRange(this->sdk) <= 0)
+			{
+				auto target = this->findTarget(w->Range(), SpellDamage);
+
+				if (target != nullptr && target->IsValidTarget())
+				{
+					w->CastOnTarget(target);
+				}
+			}
+		}
+		else if (mode == kModeMixed)
+		{
+			if (useQHarass->Enabled() && q->IsReady() && orbwalking->CanMove())
+			{
+				auto target = this->findTarget(q->Range(), PhysicalDamage);
+
+				if (target != nullptr && target->IsValidTarget())
+				{
+					q->CastOnTarget(target);
+				}
+			}
+
+			if (useWHarass->Enabled() && w->IsReady() && orbwalking->CanMove(w->GetDelay()) && LPPUtils::CountEnemiesInAttackRange(this->sdk) <= 0)
+			{
+				auto target = this->findTarget(w->Range(), SpellDamage);
+
+				if (target != nullptr && target->IsValidTarget())
+				{
+					w->CastOnTarget(target);
+				}
+			}
+		}
+
+		if (LPPUtils::IsKeyDown(useUlt) && r->IsReady())
+		{
+			auto mousePos = game->CursorPosition();
+
+			auto lowest = std::pair<float, IUnit *>(FLT_MAX, nullptr);
+			for (auto hero : entityList->GetAllHeros(false, true))
+			{
+				if (hero->IsValidTarget())
+				{
+					auto distance = (mousePos - hero->ServerPosition()).Length2D();
+
+					if (distance <= 350 && distance < lowest.first)
+					{
+						lowest = std::pair<float, IUnit *>(distance, hero);
+					}
+				}
+			}
+
+
+			if (lowest.first <= 350 && lowest.second != nullptr)
+			{
+				r->CastOnTarget(lowest.second, kHitChanceVeryHigh);
+			}
+		}
+
+		if (ksQ->Enabled())
+		{
+			for (auto hero : entityList->GetAllHeros(false, true))
+			{
+				if (player->IsValidTarget(hero, q->Range()) && damageCalc->GetSpellDamage(player, hero, kSlotQ) >= hero->GetHealth())
+				{
+					q->CastOnTarget(hero);
+				}
+			}
+		}
+	});
+
+	eventmanager::UnitEventManager::RegisterDoCastEvent([&](event_id_t id, CastedSpell const &spell) -> void {
+		if (spellDataReader->IsAutoAttack(spell.Data_) && spellDataReader->GetCaster(spell.Data_)->GetNetworkId() == player->GetNetworkId())
+		{
+			auto target = spellDataReader->GetTarget(spell.Data_);
+
+			if (target != nullptr && target->IsHero() && target->GetHealth() > damageCalc->GetAutoAttackDamage(player, target, true))
+			{
+				auto mode = orbwalking->GetOrbwalkingMode();
+
+				if (mode == kModeCombo)
+				{
+					if (q->IsReady() && useQCombo->Enabled())
+					{
+						auto qTarget = this->findTarget(q->Range(), PhysicalDamage);
+
+						if (qTarget != nullptr && qTarget->IsValidTarget())
+						{
+							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
+								q->CastOnTarget(qTarget);
+							}, [&]() -> bool {
+								return !q->IsReady();
+							}, 25);
+						}
+					}
+					else if (w->IsReady() && useWCombo->Enabled() && (w->GetDelay() <= (player->WindupTime() * 2)))
+					{
+						auto wTarget = this->findTarget(w->Range(), SpellDamage);
+
+						if (wTarget != nullptr && wTarget->IsValidTarget())
+						{
+							w->CastOnTarget(wTarget, kHitChanceMedium);
+						}
+					}
+				}
+				else if (mode == kModeMixed)
+				{
+					if (q->IsReady() && useQHarass->Enabled())
+					{
+						auto qTarget = this->findTarget(q->Range(), PhysicalDamage);
+
+						if (qTarget != nullptr && qTarget->IsValidTarget())
+						{
+							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
+								q->CastOnTarget(qTarget);
+							}, [&]() -> bool {
+								return !q->IsReady();
+							}, 25);
+						}
+					}
+					else if (w->IsReady() && useWHarass->Enabled() && (w->GetDelay() <= (player->WindupTime() * 2)))
+					{
+						auto wTarget = this->findTarget(w->Range(), SpellDamage);
+
+						if (wTarget != nullptr && wTarget->IsValidTarget())
+						{
+							w->CastOnTarget(wTarget, kHitChanceMedium);
+						}
+					}
+				}
+			}
+		}
+	});
+
+	eventmanager::DrawEventManager::RegisterRenderEvent([&](event_id_t id) -> void {
+		if (LPPUtils::IsKeyDown(useUlt) && r->IsReady())
+		{
+			static auto color = Vec4(255, 0, 0, 255);
+
+			renderer->DrawOutlinedCircle(game->CursorPosition(), color, 350.f);
+		}
+
+		auto pos = player->GetPosition();
+
+		if (drawQRange->Enabled())
+		{
+			Vec4 color;
+			qRangeColor->GetColor(&color);
+
+			renderer->DrawOutlinedCircle(pos, color, q->Range());
+		}
+
+		if (drawWRange->Enabled())
+		{
+			Vec4 color;
+			wRangeColor->GetColor(&color);
+
+			renderer->DrawOutlinedCircle(pos, color, w->Range());
+		}
+	});
 }
 
 void TsuhgiAIO::lucian()
@@ -39,6 +251,7 @@ void TsuhgiAIO::lucian()
 	static auto useQHarass = harassMenu->CheckBox("Use Q", true);
 	static auto useWHarass = harassMenu->CheckBox("Use W", true);
 	static auto useEHarass = harassMenu->CheckBox("Use E", true);
+	static auto minManaHarass = harassMenu->AddFloat("Min Mana", 0.f, 100.f, 30.f);
 
 	static auto laneClearMenu = this->menu->AddMenu("Lane Clear Settings");
 	static auto useQLaneClear = laneClearMenu->CheckBox("Use Q", false);
@@ -49,11 +262,20 @@ void TsuhgiAIO::lucian()
 	static auto useWJungleClear = jungleClearMenu->CheckBox("Use W", true);
 	static auto useEJungleClear = jungleClearMenu->CheckBox("Use E", true);
 
-	static auto minManaHarass = harassMenu->AddFloat("Min Mana", 0.f, 100.f, 30.f);
 	static auto miscMenu = this->menu->AddMenu("Misc Settings");
 	static auto useQAutoHarass = miscMenu->CheckBox("Auto Extended Q", true);
 	static auto minManaQAutoHarass = miscMenu->AddFloat("Min Mana For Extended Q", 0.f, 100.f, 30.f);
 	static auto eMode = comboMenu->AddInteger("E position (0 = side, 1 = mouse, 2 = target) ", 0, 2, 0);
+
+	static auto drawMenu = this->menu->AddMenu("Draw Settings");
+	static auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
+	static auto qRangeColor = drawMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
+	static auto drawExtendedQRange = drawMenu->CheckBox("Draw Extended Q Range", false);
+	static auto extendedQRangeColor = drawMenu->AddColor("Extended Q Range Color", 0.f, 0.f, 255.f, 255.f);
+	static auto drawWRange = drawMenu->CheckBox("Draw W Range", false);
+	static auto wRangeColor = drawMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
+	static auto drawRRange = drawMenu->CheckBox("Draw R Range", false);
+	static auto rRangeColor = drawMenu->AddColor("R Range Color", 0.f, 0.f, 255.f, 255.f);
 
 	static auto game = this->sdk->GetGame();
 	static auto entityList = this->sdk->GetEntityList();
@@ -112,7 +334,7 @@ void TsuhgiAIO::lucian()
 
 					for (auto minion : entityList->GetAllMinions(false, true, true))
 					{
-						if (player->IsValidTarget(minion, range) && !minion->IsWard())
+						if (player->IsValidTarget(minion, range))
 						{
 							auto minionPos = minion->GetPosition();
 							auto pos = LPPUtils::Extend(myPos, minionPos, extendedRange);
@@ -329,6 +551,44 @@ void TsuhgiAIO::lucian()
 					}
 				}
 			}
+		}
+	});
+
+	static auto renderer = this->sdk->GetRenderer();
+
+	eventmanager::DrawEventManager::RegisterRenderEvent([&](event_id_t id) -> void {
+		auto pos = player->GetPosition();
+		
+		if (drawQRange->Enabled())
+		{
+			Vec4 color;
+			qRangeColor->GetColor(&color);
+
+			renderer->DrawOutlinedCircle(pos, color, q->Range());
+		}
+
+		if (drawExtendedQRange->Enabled())
+		{
+			Vec4 color;
+			extendedQRangeColor->GetColor(&color);
+
+			renderer->DrawOutlinedCircle(pos, color, extendedQ->Range());
+		}
+
+		if (drawWRange->Enabled())
+		{
+			Vec4 color;
+			wRangeColor->GetColor(&color);
+
+			renderer->DrawOutlinedCircle(pos, color, w->Range());
+		}
+
+		if (drawRRange->Enabled())
+		{
+			Vec4 color;
+			rRangeColor->GetColor(&color);
+
+			renderer->DrawOutlinedCircle(pos, color, r->Range());
 		}
 	});
 }
