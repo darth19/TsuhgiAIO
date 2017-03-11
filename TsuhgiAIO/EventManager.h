@@ -84,6 +84,7 @@ namespace eventmanager {
 		static event_id_t RegisterExitVisibilityEvent(std::function<void(event_id_t, IUnit *)> func);
 		static event_id_t RegisterPlayAnimationEvent(std::function<bool(event_id_t, IUnit *, std::string const)> func);
 		static event_id_t RegisterPauseAnimationEvent(std::function<void(event_id_t, IUnit *)> func);
+		static event_id_t RegisterNewPathEvent(std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)> func);
 
 		static void UnregisterCreateEvent(event_id_t id);
 		static void UnregisterDestroyEvent(event_id_t id);
@@ -103,6 +104,7 @@ namespace eventmanager {
 		static void UnregisterExitVisibilityEvent(event_id_t id);
 		static void UnregisterPlayAnimationEvent(event_id_t id);
 		static void UnregisterPauseAnimationEvent(event_id_t id);
+		static void UnregisterNewPathEvent(event_id_t id);
 
 	private:
 		UnitEventManager() {}

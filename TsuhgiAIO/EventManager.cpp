@@ -276,6 +276,7 @@ namespace eventmanager
 	static std::vector<std::function<void(event_id_t, IUnit *)>> exitVisibilityHandlers;
 	static std::vector<std::function<bool(event_id_t, IUnit *, std::string const)>> playAnimationHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *)>> pauseAnimationHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)>> newPathEventHandlers;
 
 
 	event_id_t UnitEventManager::RegisterCreateEvent(std::function<void(event_id_t, IUnit *)> func)
@@ -402,6 +403,13 @@ namespace eventmanager
 		pauseAnimationHandlers.push_back(func);
 
 		return static_cast<event_id_t>(pauseAnimationHandlers.size() - 1);
+	}
+
+	event_id_t UnitEventManager::RegisterNewPathEvent(std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)> func)
+	{
+		newPathEventHandlers.push_back(func);
+
+		return static_cast<event_id_t>(newPathEventHandlers.size() - 1);
 	}
 
 	void UnitEventManager::UnregisterCreateEvent(event_id_t id)
@@ -545,6 +553,14 @@ namespace eventmanager
 		if (id < pauseAnimationHandlers.size())
 		{
 			pauseAnimationHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterNewPathEvent(event_id_t id)
+	{
+		if (id < newPathEventHandlers.size())
+		{
+			newPathEventHandlers[static_cast<unsigned int>(id)] = nullptr;
 		}
 	}
 
@@ -956,6 +972,17 @@ namespace eventmanager
 		}
 	}
 
+	PLUGIN_EVENT(void) OnUnitNewPath(IUnit *source, std::vector<Vec3> const &path)
+	{
+		for (event_id_t i = 0; i < newPathEventHandlers.size(); i++)
+		{
+			if (newPathEventHandlers[i] != nullptr)
+			{
+				newPathEventHandlers[i](i, source, path);
+			}
+		}
+	}
+
 	void RegisterEvents(IEventManager *eventManager)
 	{
 		//Orbwalker Events
@@ -998,6 +1025,7 @@ namespace eventmanager
 		eventManager->AddEventHandler(kEventOnExitVisible, OnUnitExitVisibility);
 		eventManager->AddEventHandler(kEventOnPlayAnimation, OnUnitPlayAnimation);
 		eventManager->AddEventHandler(kEventOnPauseAnimation, OnUnitPauseAnimation);
+		eventManager->AddEventHandler(kEventOnNewPath, OnUnitNewPath);
 	}
 
 	void UnregisterEvents(IEventManager *eventManager)
@@ -1042,5 +1070,6 @@ namespace eventmanager
 		eventManager->RemoveEventHandler(kEventOnExitVisible, OnUnitExitVisibility);
 		eventManager->RemoveEventHandler(kEventOnPlayAnimation, OnUnitPlayAnimation);
 		eventManager->RemoveEventHandler(kEventOnPauseAnimation, OnUnitPauseAnimation);
+		eventManager->RemoveEventHandler(kEventOnNewPath, OnUnitNewPath);
 	}
 }

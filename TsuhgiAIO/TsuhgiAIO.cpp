@@ -23,7 +23,7 @@ TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
 
 void TsuhgiAIO::ezreal()
 {
-	this->menu = this->sdk->AddMenu("Ezreal");
+	this->menu = this->sdk->AddMenu("Tsuhgi Ezreal");
 	static auto comboMenu = this->menu->AddMenu("Combo Options");
 	static auto useQCombo = comboMenu->CheckBox("Use Q", true);
 	static auto useWCombo = comboMenu->CheckBox("Use W", true);
@@ -240,7 +240,7 @@ void TsuhgiAIO::ezreal()
 
 void TsuhgiAIO::lucian()
 {
-	this->menu = this->sdk->AddMenu("Lucian");
+	this->menu = this->sdk->AddMenu("Tsuhgi Lucian");
 
 	static auto comboMenu = this->menu->AddMenu("Combo Settings");
 	static auto useQCombo = comboMenu->CheckBox("Use Q", true);
@@ -265,7 +265,7 @@ void TsuhgiAIO::lucian()
 	static auto miscMenu = this->menu->AddMenu("Misc Settings");
 	static auto useQAutoHarass = miscMenu->CheckBox("Auto Extended Q", true);
 	static auto minManaQAutoHarass = miscMenu->AddFloat("Min Mana For Extended Q", 0.f, 100.f, 30.f);
-	static auto eMode = comboMenu->AddInteger("E position (0 = side, 1 = mouse, 2 = target) ", 0, 2, 0);
+	static auto eMode = comboMenu->AddSelection("E Mode", 0, { "Side", "Mouse Position", "Target Position" });
 
 	static auto drawMenu = this->menu->AddMenu("Draw Settings");
 	static auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
@@ -282,7 +282,6 @@ void TsuhgiAIO::lucian()
 	static auto player = entityList->Player();
 	static auto orbwalking = this->sdk->GetOrbwalking();
 	static auto damage = this->sdk->GetDamage();
-	static auto prediction = this->sdk->GetPrediction();
 	static auto spellDataReader = this->sdk->GetSpellDataReader();
 
 	static auto q = this->sdk->CreateSpell2(kSlotQ, kTargetCast, true, false, kCollidesWithYasuoWall);
@@ -328,20 +327,25 @@ void TsuhgiAIO::lucian()
 				{
 					auto range = q->Range();
 
-					Vec3 predictedPos;
-					prediction->GetFutureUnitPosition(target, qDelay, true, predictedPos);
-					auto targetPos = LPPUtils::Extend(myPos, predictedPos, extendedRange);
-
-					for (auto minion : entityList->GetAllMinions(false, true, true))
+					AdvPredictionOutput output;
+					if (extendedQ->RunPrediction(target, false, kCollidesWithNothing, &output))
 					{
-						if (player->IsValidTarget(minion, range))
+						if (output.HitChance >= kHitChanceMedium)
 						{
-							auto minionPos = minion->GetPosition();
-							auto pos = LPPUtils::Extend(myPos, minionPos, extendedRange);
+							auto targetPos = LPPUtils::Extend(myPos, output.TargetPosition, extendedRange);
 
-							if ((targetPos - pos).Length2D() <= extendedQ->Radius())
+							for (auto minion : entityList->GetAllMinions(false, true, true))
 							{
-								q->CastOnUnit(minion);
+								if (player->IsValidTarget(minion, range))
+								{
+									auto minionPos = minion->GetPosition();
+									auto pos = LPPUtils::Extend(myPos, minionPos, extendedRange);
+
+									if ((targetPos - pos).Length2D() <= extendedQ->Radius())
+									{
+										q->CastOnUnit(minion);
+									}
+								}
 							}
 						}
 					}
