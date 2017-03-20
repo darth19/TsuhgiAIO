@@ -1,5 +1,4 @@
 #include "EventManager.h"
-#include "lpputils.h"
 
 namespace eventmanager
 {
@@ -13,44 +12,44 @@ namespace eventmanager
 	static std::vector<std::function<void(event_id_t, IUnit *)>> nonKillableMinionHandlers;
 	static std::vector<std::function<IUnit *(event_id_t)>> findTargetHandlers;
 
-	event_id_t OrbwalkerEventManager::RegisterBeforeAttackEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterBeforeAttackEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		beforeAttackHandlers.push_back(func);
+		beforeAttackHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(beforeAttackHandlers.size() - 1);
 	}
 
-	event_id_t OrbwalkerEventManager::RegisterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterAttackEvent(const std::function<void(event_id_t, IUnit *, IUnit *)> &func)
 	{
-		attackHandlers.push_back(func);
+		attackHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(attackHandlers.size() - 1);
 	}
 
-	event_id_t OrbwalkerEventManager::RegisterAfterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterAfterAttackEvent(const std::function<void(event_id_t, IUnit *, IUnit *)> &func)
 	{
-		afterAttackHandlers.push_back(func);
+		afterAttackHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(afterAttackHandlers.size() - 1);
 	}
 
-	event_id_t OrbwalkerEventManager::RegisterNewTargetEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterNewTargetEvent(const std::function<void(event_id_t, IUnit *, IUnit *)> &func)
 	{
-		newTargetHandlers.push_back(func);
+		newTargetHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(newTargetHandlers.size() - 1);
 	}
 
-	event_id_t OrbwalkerEventManager::RegisterNonKillableMinionEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t OrbwalkerEventManager::RegisterNonKillableMinionEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		nonKillableMinionHandlers.push_back(func);
+		nonKillableMinionHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(nonKillableMinionHandlers.size() - 1);
 	}
 
-	event_id_t OrbwalkerEventManager::RegisterFindTargetEvent(std::function<IUnit *(event_id_t)> func)
+	event_id_t OrbwalkerEventManager::RegisterFindTargetEvent(const std::function<IUnit *(event_id_t)> &func)
 	{
-		findTargetHandlers.push_back(func);
+		findTargetHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(findTargetHandlers.size() - 1);
 	}
@@ -111,30 +110,30 @@ namespace eventmanager
 	static std::vector<std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)>> wndProcHandlers;
 	static std::vector<std::function<void(event_id_t, JungleNotifyData *)>> jungleNotifyHandlers;
 
-	event_id_t GameEventManager::RegisterUpdateEvent(std::function<void(event_id_t)> func)
+	event_id_t GameEventManager::RegisterUpdateEvent(const std::function<void(event_id_t)> &func)
 	{
-		updateHandlers.push_back(func);
+		updateHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(updateHandlers.size() - 1);
 	}
 
-	event_id_t GameEventManager::RegisterEndEvent(std::function<void(event_id_t)> func)
+	event_id_t GameEventManager::RegisterEndEvent(const std::function<void(event_id_t)> &func)
 	{
-		endHandlers.push_back(func);
+		endHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(endHandlers.size() - 1);
 	}
 
-	event_id_t GameEventManager::RegisterWndProcEvent(std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func)
+	event_id_t GameEventManager::RegisterWndProcEvent(const std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> &func)
 	{
-		wndProcHandlers.push_back(func);
+		wndProcHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(wndProcHandlers.size() - 1);
 	}
 
-	event_id_t GameEventManager::RegisterJungleNotifyEvent(std::function<void(event_id_t, JungleNotifyData *)> func)
+	event_id_t GameEventManager::RegisterJungleNotifyEvent(const std::function<void(event_id_t, JungleNotifyData *)> &func)
 	{
-		jungleNotifyHandlers.push_back(func);
+		jungleNotifyHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(jungleNotifyHandlers.size() - 1);
 	}
@@ -180,37 +179,37 @@ namespace eventmanager
 	static std::vector<std::function<void(event_id_t)>> D3DPreResetEventHandlers;
 	static std::vector<std::function<void(event_id_t)>> D3DPostResetEventHandlers;
 
-	event_id_t DrawEventManager::RegisterRenderEvent(std::function<void(event_id_t)> func)
+	event_id_t DrawEventManager::RegisterRenderEvent(const std::function<void(event_id_t)> &func)
 	{
-		renderHandlers.push_back(func);
+		renderHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(renderHandlers.size() - 1);
 	}
 
-	event_id_t DrawEventManager::RegisterRenderBehindHudEvent(std::function<void(event_id_t)> func)
+	event_id_t DrawEventManager::RegisterRenderBehindHudEvent(const std::function<void(event_id_t)> &func)
 	{
-		renderBehindHudEventHandlers.push_back(func);
+		renderBehindHudEventHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(renderBehindHudEventHandlers.size() - 1);
 	}
 
-	event_id_t DrawEventManager::RegisterD3DPresentEvent(std::function<void(event_id_t)> func)
+	event_id_t DrawEventManager::RegisterD3DPresentEvent(const std::function<void(event_id_t)> &func)
 	{
-		D3DPresentEventHandlers.push_back(func);
+		D3DPresentEventHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(D3DPresentEventHandlers.size() - 1);
 	}
 
-	event_id_t DrawEventManager::RegisterD3DPreResetEvent(std::function<void(event_id_t)> func)
+	event_id_t DrawEventManager::RegisterD3DPreResetEvent(const std::function<void(event_id_t)> &func)
 	{
-		D3DPreResetEventHandlers.push_back(func);
+		D3DPreResetEventHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(D3DPreResetEventHandlers.size() - 1);
 	}
 
-	event_id_t DrawEventManager::RegisterD3DPostResetEvent(std::function<void(event_id_t)> func)
+	event_id_t DrawEventManager::RegisterD3DPostResetEvent(const std::function<void(event_id_t)> &func)
 	{
-		D3DPostResetEventHandlers.push_back(func);
+		D3DPostResetEventHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(D3DPostResetEventHandlers.size() - 1);
 	}
@@ -264,152 +263,160 @@ namespace eventmanager
 	static std::vector<std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)>> issueOrderHandlers;
 	static std::vector<std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)>> preCastHandlers;
 	static std::vector<std::function<void(event_id_t, int, Vec3 *, bool *, bool *)>> updateChargedSpellHandlers;
-	static std::vector<std::function<void(event_id_t, CastedSpell const &)>> processSpellCastHandlers;
-	static std::vector<std::function<void(event_id_t, CastedSpell const &)>> doCastHandlers;
-	static std::vector<std::function<void(event_id_t, InterruptibleSpell const &)>> processInterruptibleSpellHandlers;
-	static std::vector<std::function<void(event_id_t, GapCloserSpell const &)>> processGapCloserSpellHandlers;
+	static std::vector<std::function<void(event_id_t, const CastedSpell &)>> processSpellCastHandlers;
+	static std::vector<std::function<void(event_id_t, const CastedSpell &)>> doCastHandlers;
+	static std::vector<std::function<void(event_id_t, const InterruptibleSpell &)>> processInterruptibleSpellHandlers;
+	static std::vector<std::function<void(event_id_t, const GapCloserSpell &)>> processGapCloserSpellHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *, void *)>> buffAddHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *, void *)>> buffRemoveHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *, int)>> levelUpHandlers;
 	static std::vector<std::function<void(event_id_t, UnitDash *)>> dashHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *)>> enterVisibilityHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *)>> exitVisibilityHandlers;
-	static std::vector<std::function<bool(event_id_t, IUnit *, std::string const)>> playAnimationHandlers;
+	static std::vector<std::function<bool(event_id_t, IUnit *, const std::string)>> playAnimationHandlers;
 	static std::vector<std::function<void(event_id_t, IUnit *)>> pauseAnimationHandlers;
-	static std::vector<std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)>> newPathEventHandlers;
+	static std::vector<std::function<void(event_id_t, IUnit *, const std::vector<Vec3> &)>> newPathHandlers;
+	static std::vector<std::function<void(event_id_t, OnTeleportArgs*)>> teleportHandlers;
 
 
-	event_id_t UnitEventManager::RegisterCreateEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterCreateEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		createHandlers.push_back(func);
+		createHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(createHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterDestroyEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterDestroyEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		destroyHandlers.push_back(func);
+		destroyHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(destroyHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterDeathEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterDeathEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		deathHandlers.push_back(func);
+		deathHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(deathHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterIssueOrderEvent(std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterIssueOrderEvent(const std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)> &func)
 	{
-		issueOrderHandlers.push_back(func);
+		issueOrderHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(issueOrderHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterPreCastEvent(std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)> func)
+	event_id_t UnitEventManager::RegisterPreCastEvent(const std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)> &func)
 	{
-		preCastHandlers.push_back(func);
+		preCastHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(preCastHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterUpdateChargedSpellEvent(std::function<void(event_id_t, int, Vec3 *, bool *, bool *)> func)
+	event_id_t UnitEventManager::RegisterUpdateChargedSpellEvent(const std::function<void(event_id_t, int, Vec3 *, bool *, bool *)> &func)
 	{
-		updateChargedSpellHandlers.push_back(func);
+		updateChargedSpellHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(updateChargedSpellHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterProcessSpellCastEvent(std::function<void(event_id_t, CastedSpell const &)> func)
+	event_id_t UnitEventManager::RegisterProcessSpellCastEvent(const std::function<void(event_id_t, const CastedSpell &)> &func)
 	{
-		processSpellCastHandlers.push_back(func);
+		processSpellCastHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(processSpellCastHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterDoCastEvent(std::function<void(event_id_t, CastedSpell const &)> func)
+	event_id_t UnitEventManager::RegisterDoCastEvent(const std::function<void(event_id_t, const CastedSpell &)> &func)
 	{
-		doCastHandlers.push_back(func);
+		doCastHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(doCastHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterProcessInterruptibleSpellEvent(std::function<void(event_id_t, InterruptibleSpell const &)> func)
+	event_id_t UnitEventManager::RegisterProcessInterruptibleSpellEvent(const std::function<void(event_id_t, const InterruptibleSpell &)> &func)
 	{
-		processInterruptibleSpellHandlers.push_back(func);
+		processInterruptibleSpellHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(processInterruptibleSpellHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterProcessGapCloserSpellEvent(std::function<void(event_id_t, GapCloserSpell const &)> func)
+	event_id_t UnitEventManager::RegisterProcessGapCloserSpellEvent(const std::function<void(event_id_t, const GapCloserSpell &)> &func)
 	{
-		processGapCloserSpellHandlers.push_back(func);
+		processGapCloserSpellHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(processGapCloserSpellHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterBuffAddEvent(std::function<void(event_id_t, IUnit *, void *)> func)
+	event_id_t UnitEventManager::RegisterBuffAddEvent(const std::function<void(event_id_t, IUnit *, void *)> &func)
 	{
-		buffAddHandlers.push_back(func);
+		buffAddHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(buffAddHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterBuffRemoveEvent(std::function<void(event_id_t, IUnit *, void *)> func)
+	event_id_t UnitEventManager::RegisterBuffRemoveEvent(const std::function<void(event_id_t, IUnit *, void *)> &func)
 	{
-		buffRemoveHandlers.push_back(func);
+		buffRemoveHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(buffRemoveHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterLevelUpEvent(std::function<void(event_id_t, IUnit *, int)> func)
+	event_id_t UnitEventManager::RegisterLevelUpEvent(const std::function<void(event_id_t, IUnit *, int)> &func)
 	{
-		levelUpHandlers.push_back(func);
+		levelUpHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(levelUpHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterDashEvent(std::function<void(event_id_t, UnitDash *)> func)
+	event_id_t UnitEventManager::RegisterDashEvent(const std::function<void(event_id_t, UnitDash *)> &func)
 	{
-		dashHandlers.push_back(func);
+		dashHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(dashHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterEnterVisibilityEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterEnterVisibilityEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		enterVisibilityHandlers.push_back(func);
+		enterVisibilityHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(enterVisibilityHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterExitVisibilityEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterExitVisibilityEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		exitVisibilityHandlers.push_back(func);
+		exitVisibilityHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(exitVisibilityHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterPlayAnimationEvent(std::function<bool(event_id_t, IUnit *, std::string const)> func)
+	event_id_t UnitEventManager::RegisterPlayAnimationEvent(const std::function<bool(event_id_t, IUnit *, const std::string)> &func)
 	{
-		playAnimationHandlers.push_back(func);
+		playAnimationHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(playAnimationHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterPauseAnimationEvent(std::function<void(event_id_t, IUnit *)> func)
+	event_id_t UnitEventManager::RegisterPauseAnimationEvent(const std::function<void(event_id_t, IUnit *)> &func)
 	{
-		pauseAnimationHandlers.push_back(func);
+		pauseAnimationHandlers.emplace_back(func);
 
 		return static_cast<event_id_t>(pauseAnimationHandlers.size() - 1);
 	}
 
-	event_id_t UnitEventManager::RegisterNewPathEvent(std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)> func)
+	event_id_t UnitEventManager::RegisterNewPathEvent(const std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)> &func)
 	{
-		newPathEventHandlers.push_back(func);
+		newPathHandlers.emplace_back(func);
 
-		return static_cast<event_id_t>(newPathEventHandlers.size() - 1);
+		return static_cast<event_id_t>(newPathHandlers.size() - 1);
+	}
+
+	event_id_t UnitEventManager::RegisterTeleportEvent(const std::function<void(event_id_t, OnTeleportArgs*)> &func)
+	{
+		teleportHandlers.emplace_back(func);
+
+		return static_cast<event_id_t>(teleportHandlers.size() - 1);
 	}
 
 	void UnitEventManager::UnregisterCreateEvent(event_id_t id)
@@ -558,9 +565,17 @@ namespace eventmanager
 
 	void UnitEventManager::UnregisterNewPathEvent(event_id_t id)
 	{
-		if (id < newPathEventHandlers.size())
+		if (id < newPathHandlers.size())
 		{
-			newPathEventHandlers[static_cast<unsigned int>(id)] = nullptr;
+			newPathHandlers[static_cast<unsigned int>(id)] = nullptr;
+		}
+	}
+
+	void UnitEventManager::UnregisterTeleportEvent(event_id_t id)
+	{
+		if (id < teleportHandlers.size())
+		{
+			teleportHandlers[static_cast<unsigned int>(id)] = nullptr;
 		}
 	}
 
@@ -681,7 +696,7 @@ namespace eventmanager
 		return ret;
 	}
 
-	PLUGIN_EVENT(void) OnJungleNotify(JungleNotifyData *args)
+	PLUGIN_EVENT(void) OnGameJungleNotify(JungleNotifyData *args)
 	{
 		for (event_id_t i = 0; i < jungleNotifyHandlers.size(); i++)
 		{
@@ -831,7 +846,7 @@ namespace eventmanager
 		}
 	}
 
-	PLUGIN_EVENT(void) OnUnitProcessSpellCast(CastedSpell const &spell)
+	PLUGIN_EVENT(void) OnUnitProcessSpellCast(const CastedSpell &spell)
 	{
 		for (event_id_t i = 0; i < processSpellCastHandlers.size(); i++)
 		{
@@ -842,7 +857,7 @@ namespace eventmanager
 		}
 	}
 
-	PLUGIN_EVENT(void) OnUnitDoCast(CastedSpell const &spell)
+	PLUGIN_EVENT(void) OnUnitDoCast(const CastedSpell &spell)
 	{
 		for (event_id_t i = 0; i < doCastHandlers.size(); i++)
 		{
@@ -853,7 +868,7 @@ namespace eventmanager
 		}
 	}
 
-	PLUGIN_EVENT(void) OnUnitProcessInterruptableSpellCast(InterruptibleSpell const &spell)
+	PLUGIN_EVENT(void) OnUnitProcessInterruptableSpellCast(const InterruptibleSpell &spell)
 	{
 		for (event_id_t i = 0; i < processInterruptibleSpellHandlers.size(); i++)
 		{
@@ -864,7 +879,7 @@ namespace eventmanager
 		}
 	}
 
-	PLUGIN_EVENT(void) OnUnitProcessGapCloserSpellCast(GapCloserSpell const &spell)
+	PLUGIN_EVENT(void) OnUnitProcessGapCloserSpellCast(const GapCloserSpell &spell)
 	{
 		for (event_id_t i = 0; i < processGapCloserSpellHandlers.size(); i++)
 		{
@@ -941,7 +956,7 @@ namespace eventmanager
 		}
 	}
 
-	PLUGIN_EVENT(bool) OnUnitPlayAnimation(IUnit *source, std::string const animationId)
+	PLUGIN_EVENT(bool) OnUnitPlayAnimation(IUnit *source, const std::string animationId)
 	{
 		auto process = true;
 
@@ -972,13 +987,24 @@ namespace eventmanager
 		}
 	}
 
-	PLUGIN_EVENT(void) OnUnitNewPath(IUnit *source, std::vector<Vec3> const &path)
+	PLUGIN_EVENT(void) OnUnitNewPath(IUnit *source, const std::vector<Vec3> &path)
 	{
-		for (event_id_t i = 0; i < newPathEventHandlers.size(); i++)
+		for (event_id_t i = 0; i < newPathHandlers.size(); i++)
 		{
-			if (newPathEventHandlers[i] != nullptr)
+			if (newPathHandlers[i] != nullptr)
 			{
-				newPathEventHandlers[i](i, source, path);
+				newPathHandlers[i](i, source, path);
+			}
+		}
+	}
+
+	PLUGIN_EVENT(void) OnUnitTeleport(OnTeleportArgs *args)
+	{
+		for (event_id_t i = 0; i < teleportHandlers.size(); i++)
+		{
+			if (teleportHandlers[i] != nullptr)
+			{
+				teleportHandlers[i](i, args);
 			}
 		}
 	}
@@ -997,7 +1023,7 @@ namespace eventmanager
 		eventManager->AddEventHandler(kEventOnGameUpdate, OnGameUpdate);
 		eventManager->AddEventHandler(kEventOnGameEnd, OnGameEnd);
 		eventManager->AddEventHandler(kEventOnWndProc, OnGameWndProc);
-		eventManager->AddEventHandler(kEventOnJungleNotification, OnJungleNotify);
+		eventManager->AddEventHandler(kEventOnJungleNotification, OnGameJungleNotify);
 
 		//Draw Events
 		eventManager->AddEventHandler(kEventOnRender, OnDrawRender);
@@ -1026,6 +1052,7 @@ namespace eventmanager
 		eventManager->AddEventHandler(kEventOnPlayAnimation, OnUnitPlayAnimation);
 		eventManager->AddEventHandler(kEventOnPauseAnimation, OnUnitPauseAnimation);
 		eventManager->AddEventHandler(kEventOnNewPath, OnUnitNewPath);
+		eventManager->AddEventHandler(kEventOnTeleport, OnUnitTeleport);
 	}
 
 	void UnregisterEvents(IEventManager *eventManager)
@@ -1042,7 +1069,7 @@ namespace eventmanager
 		eventManager->RemoveEventHandler(kEventOnGameUpdate, OnGameUpdate);
 		eventManager->RemoveEventHandler(kEventOnGameEnd, OnGameEnd);
 		eventManager->RemoveEventHandler(kEventOnWndProc, OnGameWndProc);
-		eventManager->RemoveEventHandler(kEventOnJungleNotification, OnJungleNotify);
+		eventManager->RemoveEventHandler(kEventOnJungleNotification, OnGameJungleNotify);
 
 		//Draw Events
 		eventManager->RemoveEventHandler(kEventOnRender, OnDrawRender);
@@ -1071,5 +1098,6 @@ namespace eventmanager
 		eventManager->RemoveEventHandler(kEventOnPlayAnimation, OnUnitPlayAnimation);
 		eventManager->RemoveEventHandler(kEventOnPauseAnimation, OnUnitPauseAnimation);
 		eventManager->RemoveEventHandler(kEventOnNewPath, OnUnitNewPath);
+		eventManager->RemoveEventHandler(kEventOnTeleport, OnUnitTeleport);
 	}
 }

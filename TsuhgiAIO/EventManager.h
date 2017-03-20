@@ -4,17 +4,18 @@
 #include "PluginSDK.h"
 
 typedef unsigned int event_id_t;
+constexpr event_id_t invalid_event = -1;
 
 namespace eventmanager {
 	class OrbwalkerEventManager
 	{
 	public:
-		static event_id_t RegisterBeforeAttackEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func);
-		static event_id_t RegisterAfterAttackEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func);
-		static event_id_t RegisterNewTargetEvent(std::function<void(event_id_t, IUnit *, IUnit *)> func);
-		static event_id_t RegisterNonKillableMinionEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterFindTargetEvent(std::function<IUnit *(event_id_t)> func);
+		static event_id_t RegisterBeforeAttackEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterAttackEvent(const std::function<void(event_id_t, IUnit *, IUnit *)> &func);
+		static event_id_t RegisterAfterAttackEvent(const std::function<void(event_id_t, IUnit *, IUnit *)> &func);
+		static event_id_t RegisterNewTargetEvent(const std::function<void(event_id_t, IUnit *, IUnit *)> &func);
+		static event_id_t RegisterNonKillableMinionEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterFindTargetEvent(const std::function<IUnit *(event_id_t)> &func);
 
 		static void UnregisterBeforeAttackEvent(event_id_t id);
 		static void UnregisterAttackEvent(event_id_t id);
@@ -30,10 +31,10 @@ namespace eventmanager {
 	class GameEventManager
 	{
 	public:
-		static event_id_t RegisterUpdateEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterEndEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterWndProcEvent(std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> func);
-		static event_id_t RegisterJungleNotifyEvent(std::function<void(event_id_t, JungleNotifyData *)> func);
+		static event_id_t RegisterUpdateEvent(const std::function<void(event_id_t)> &func);
+		static event_id_t RegisterEndEvent(const std::function<void(event_id_t)> &func);
+		static event_id_t RegisterWndProcEvent(const std::function<bool(event_id_t, HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)> &func);
+		static event_id_t RegisterJungleNotifyEvent(const std::function<void(event_id_t, JungleNotifyData *)> &func);
 
 		static void UnregisterUpdateEvent(event_id_t id);
 		static void UnregisterEndEvent(event_id_t id);
@@ -47,11 +48,11 @@ namespace eventmanager {
 	class DrawEventManager
 	{
 	public:
-		static event_id_t RegisterRenderEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterRenderBehindHudEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterD3DPresentEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterD3DPreResetEvent(std::function<void(event_id_t)> func);
-		static event_id_t RegisterD3DPostResetEvent(std::function<void(event_id_t)> func);
+		static event_id_t RegisterRenderEvent(const std::function<void(event_id_t)> &func);
+		static event_id_t RegisterRenderBehindHudEvent(const std::function<void(event_id_t)> &func);
+		static event_id_t RegisterD3DPresentEvent(const std::function<void(event_id_t)> &func);
+		static event_id_t RegisterD3DPreResetEvent(const std::function<void(event_id_t)> &func);
+		static event_id_t RegisterD3DPostResetEvent(const std::function<void(event_id_t)> &func);
 
 		static void UnregisterRenderEvent(event_id_t id);
 		static void UnregisterRenderBehindHudEvent(event_id_t id);
@@ -66,25 +67,26 @@ namespace eventmanager {
 	class UnitEventManager
 	{
 	public:
-		static event_id_t RegisterCreateEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterDestroyEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterDeathEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterIssueOrderEvent(std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)> func);
-		static event_id_t RegisterPreCastEvent(std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)> func);
-		static event_id_t RegisterUpdateChargedSpellEvent(std::function<void(event_id_t, int, Vec3 *, bool *, bool *)> func);
-		static event_id_t RegisterProcessSpellCastEvent(std::function<void(event_id_t, CastedSpell const &)> func);
-		static event_id_t RegisterDoCastEvent(std::function<void(event_id_t, CastedSpell const &)> func);
-		static event_id_t RegisterProcessInterruptibleSpellEvent(std::function<void(event_id_t, InterruptibleSpell const &)> func);
-		static event_id_t RegisterProcessGapCloserSpellEvent(std::function<void(event_id_t, GapCloserSpell const &)> func);
-		static event_id_t RegisterBuffAddEvent(std::function<void(event_id_t, IUnit *, void *)> func);
-		static event_id_t RegisterBuffRemoveEvent(std::function<void(event_id_t, IUnit *, void *)> func);
-		static event_id_t RegisterLevelUpEvent(std::function<void(event_id_t, IUnit *, int)> func);
-		static event_id_t RegisterDashEvent(std::function<void(event_id_t, UnitDash *)> func);
-		static event_id_t RegisterEnterVisibilityEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterExitVisibilityEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterPlayAnimationEvent(std::function<bool(event_id_t, IUnit *, std::string const)> func);
-		static event_id_t RegisterPauseAnimationEvent(std::function<void(event_id_t, IUnit *)> func);
-		static event_id_t RegisterNewPathEvent(std::function<void(event_id_t, IUnit *, std::vector<Vec3> const &)> func);
+		static event_id_t RegisterCreateEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterDestroyEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterDeathEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterIssueOrderEvent(const std::function<bool(event_id_t, IUnit *, int, Vec3 *, IUnit *)> &func);
+		static event_id_t RegisterPreCastEvent(const std::function<bool(event_id_t, int, IUnit *, Vec3 *, Vec3 *)> &func);
+		static event_id_t RegisterUpdateChargedSpellEvent(const std::function<void(event_id_t, int, Vec3 *, bool *, bool *)> &func);
+		static event_id_t RegisterProcessSpellCastEvent(const std::function<void(event_id_t, const CastedSpell &)> &func);
+		static event_id_t RegisterDoCastEvent(const std::function<void(event_id_t, const CastedSpell &)> &func);
+		static event_id_t RegisterProcessInterruptibleSpellEvent(const std::function<void(event_id_t, const InterruptibleSpell &)> &func);
+		static event_id_t RegisterProcessGapCloserSpellEvent(const std::function<void(event_id_t, const GapCloserSpell &)> &func);
+		static event_id_t RegisterBuffAddEvent(const std::function<void(event_id_t, IUnit *, void *)> &func);
+		static event_id_t RegisterBuffRemoveEvent(const std::function<void(event_id_t, IUnit *, void *)> &func);
+		static event_id_t RegisterLevelUpEvent(const std::function<void(event_id_t, IUnit *, int)> &func);
+		static event_id_t RegisterDashEvent(const std::function<void(event_id_t, UnitDash *)> &func);
+		static event_id_t RegisterEnterVisibilityEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterExitVisibilityEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterPlayAnimationEvent(const std::function<bool(event_id_t, IUnit *, const std::string)> &func);
+		static event_id_t RegisterPauseAnimationEvent(const std::function<void(event_id_t, IUnit *)> &func);
+		static event_id_t RegisterNewPathEvent(const std::function<void(event_id_t, IUnit *, const std::vector<Vec3> &)> &func);
+		static event_id_t RegisterTeleportEvent(const std::function<void(event_id_t, OnTeleportArgs *)> &func);
 
 		static void UnregisterCreateEvent(event_id_t id);
 		static void UnregisterDestroyEvent(event_id_t id);
@@ -105,6 +107,7 @@ namespace eventmanager {
 		static void UnregisterPlayAnimationEvent(event_id_t id);
 		static void UnregisterPauseAnimationEvent(event_id_t id);
 		static void UnregisterNewPathEvent(event_id_t id);
+		static void UnregisterTeleportEvent(event_id_t id);
 
 	private:
 		UnitEventManager() {}

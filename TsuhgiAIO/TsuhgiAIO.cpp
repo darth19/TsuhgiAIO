@@ -24,31 +24,31 @@ TsuhgiAIO::TsuhgiAIO(IPluginSDK *sdk)
 void TsuhgiAIO::ezreal()
 {
 	this->menu = this->sdk->AddMenu("Tsuhgi Ezreal");
-	static auto comboMenu = this->menu->AddMenu("Combo Options");
-	static auto useQCombo = comboMenu->CheckBox("Use Q", true);
-	static auto useWCombo = comboMenu->CheckBox("Use W", true);
+	static const auto comboMenu = this->menu->AddMenu("Combo Options");
+	static const auto useQCombo = comboMenu->CheckBox("Use Q", true);
+	static const auto useWCombo = comboMenu->CheckBox("Use W", true);
 
-	static auto harassMenu = this->menu->AddMenu("Harass Options");
-	static auto useQHarass = harassMenu->CheckBox("Use Q", true);
-	static auto useWHarass = harassMenu->CheckBox("Use W", true);
+	static const auto harassMenu = this->menu->AddMenu("Harass Options");
+	static const auto useQHarass = harassMenu->CheckBox("Use Q", true);
+	static const auto useWHarass = harassMenu->CheckBox("Use W", true);
 
-	static auto miscMenu = this->menu->AddMenu("Misc Options");
-	static auto ksQ = miscMenu->CheckBox("KS with Q", true);
-	static auto useUlt = miscMenu->AddKey("Use Ult", 'V');
+	static const auto miscMenu = this->menu->AddMenu("Misc Options");
+	static const auto ksQ = miscMenu->CheckBox("KS with Q", true);
+	static const auto useUlt = miscMenu->AddKey("Use Ult", 'V');
 
-	static auto drawMenu = this->menu->AddMenu("Draw Options");
-	static auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
-	static auto qRangeColor = drawMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
-	static auto drawWRange = drawMenu->CheckBox("Draw W Range", false);
-	static auto wRangeColor = drawMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
+	static const auto drawMenu = this->menu->AddMenu("Draw Options");
+	static const auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
+	static const auto qRangeColor = drawMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
+	static const auto drawWRange = drawMenu->CheckBox("Draw W Range", false);
+	static const auto wRangeColor = drawMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
 
-	static auto game = this->sdk->GetGame();
-	static auto entityList = this->sdk->GetEntityList();
-	static auto player = entityList->Player();
-	static auto orbwalking = this->sdk->GetOrbwalking();
-	static auto spellDataReader = this->sdk->GetSpellDataReader();
-	static auto damageCalc = this->sdk->GetDamage();
-	static auto renderer = this->sdk->GetRenderer();
+	static const auto game = this->sdk->GetGame();
+	static const auto entityList = this->sdk->GetEntityList();
+	static const auto player = entityList->Player();
+	static const auto orbwalking = this->sdk->GetOrbwalking();
+	static const auto spellDataReader = this->sdk->GetSpellDataReader();
+	static const auto damageCalc = this->sdk->GetDamage();
+	static const auto renderer = this->sdk->GetRenderer();
 
 	static auto q = this->sdk->CreateSpell2(kSlotQ, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithMinions | kCollidesWithYasuoWall));
 	q->SetSkillshot(0.25f, 60.f, 2000.f, 1200.f);
@@ -73,7 +73,7 @@ void TsuhgiAIO::ezreal()
 
 				if (target != nullptr && target->IsValidTarget())
 				{
-					q->CastOnTarget(target);
+					q->CastOnTarget(target, kHitChanceVeryHigh);
 				}
 			}
 
@@ -83,7 +83,7 @@ void TsuhgiAIO::ezreal()
 
 				if (target != nullptr && target->IsValidTarget())
 				{
-					w->CastOnTarget(target);
+					w->CastOnTarget(target, kHitChanceVeryHigh);
 				}
 			}
 		}
@@ -95,7 +95,7 @@ void TsuhgiAIO::ezreal()
 
 				if (target != nullptr && target->IsValidTarget())
 				{
-					q->CastOnTarget(target);
+					q->CastOnTarget(target, kHitChanceVeryHigh);
 				}
 			}
 
@@ -105,7 +105,7 @@ void TsuhgiAIO::ezreal()
 
 				if (target != nullptr && target->IsValidTarget())
 				{
-					w->CastOnTarget(target);
+					w->CastOnTarget(target, kHitChanceVeryHigh);
 				}
 			}
 		}
@@ -141,7 +141,7 @@ void TsuhgiAIO::ezreal()
 			{
 				if (player->IsValidTarget(hero, q->Range()) && damageCalc->GetSpellDamage(player, hero, kSlotQ) >= hero->GetHealth())
 				{
-					q->CastOnTarget(hero);
+					q->CastOnTarget(hero, kHitChanceVeryHigh);
 				}
 			}
 		}
@@ -165,7 +165,7 @@ void TsuhgiAIO::ezreal()
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
 							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
-								q->CastOnTarget(qTarget);
+								q->CastOnTarget(qTarget, kHitChanceVeryHigh);
 							}, [&]() -> bool {
 								return !q->IsReady();
 							}, 25);
@@ -177,7 +177,7 @@ void TsuhgiAIO::ezreal()
 
 						if (wTarget != nullptr && wTarget->IsValidTarget())
 						{
-							w->CastOnTarget(wTarget, kHitChanceMedium);
+							w->CastOnTarget(wTarget, kHitChanceVeryHigh);
 						}
 					}
 				}
@@ -190,7 +190,7 @@ void TsuhgiAIO::ezreal()
 						if (qTarget != nullptr && qTarget->IsValidTarget())
 						{
 							LPPUtils::RepeatUntil(this->sdk, [&, qTarget]() -> void {
-								q->CastOnTarget(qTarget);
+								q->CastOnTarget(qTarget, kHitChanceVeryHigh);
 							}, [&]() -> bool {
 								return !q->IsReady();
 							}, 25);
@@ -202,7 +202,7 @@ void TsuhgiAIO::ezreal()
 
 						if (wTarget != nullptr && wTarget->IsValidTarget())
 						{
-							w->CastOnTarget(wTarget, kHitChanceMedium);
+							w->CastOnTarget(wTarget, kHitChanceVeryHigh);
 						}
 					}
 				}
@@ -213,7 +213,7 @@ void TsuhgiAIO::ezreal()
 	eventmanager::DrawEventManager::RegisterRenderEvent([&](event_id_t id) -> void {
 		if (LPPUtils::IsKeyDown(useUlt) && r->IsReady())
 		{
-			static auto color = Vec4(255, 0, 0, 255);
+			static const auto color = Vec4(255, 0, 0, 255);
 
 			renderer->DrawOutlinedCircle(game->CursorPosition(), color, 350.f);
 		}
@@ -242,47 +242,48 @@ void TsuhgiAIO::lucian()
 {
 	this->menu = this->sdk->AddMenu("Tsuhgi Lucian");
 
-	static auto comboMenu = this->menu->AddMenu("Combo Settings");
-	static auto useQCombo = comboMenu->CheckBox("Use Q", true);
-	static auto useWCombo = comboMenu->CheckBox("Use W", true);
-	static auto useECombo = comboMenu->CheckBox("Use E", true);
+	static const auto comboMenu = this->menu->AddMenu("Combo Settings");
+	static const auto useQCombo = comboMenu->CheckBox("Use Q", true);
+	static const auto useWCombo = comboMenu->CheckBox("Use W", true);
+	static const auto useECombo = comboMenu->CheckBox("Use E", true);
 
-	static auto harassMenu = this->menu->AddMenu("Harass Settings");
-	static auto useQHarass = harassMenu->CheckBox("Use Q", true);
-	static auto useWHarass = harassMenu->CheckBox("Use W", true);
-	static auto useEHarass = harassMenu->CheckBox("Use E", true);
-	static auto minManaHarass = harassMenu->AddFloat("Min Mana", 0.f, 100.f, 30.f);
+	static const auto harassMenu = this->menu->AddMenu("Harass Settings");
+	static const auto useQHarass = harassMenu->CheckBox("Use Q", true);
+	static const auto useWHarass = harassMenu->CheckBox("Use W", true);
+	static const auto useEHarass = harassMenu->CheckBox("Use E", true);
+	static const auto minManaHarass = harassMenu->AddFloat("Min Mana", 0.f, 100.f, 30.f);
 
-	static auto laneClearMenu = this->menu->AddMenu("Lane Clear Settings");
-	static auto useQLaneClear = laneClearMenu->CheckBox("Use Q", false);
-	static auto minQCountLaneClear = laneClearMenu->AddInteger("Min Q Count", 1, 5, 3);
+	static const auto laneClearMenu = this->menu->AddMenu("Lane Clear Settings");
+	static const auto useQLaneClear = laneClearMenu->CheckBox("Use Q", false);
+	static const auto minQCountLaneClear = laneClearMenu->AddInteger("Min Q Count", 1, 5, 3);
 
-	static auto jungleClearMenu = this->menu->AddMenu("Jungle Clear Settings");
-	static auto useQJungleClear = jungleClearMenu->CheckBox("Use Q", true);
-	static auto useWJungleClear = jungleClearMenu->CheckBox("Use W", true);
-	static auto useEJungleClear = jungleClearMenu->CheckBox("Use E", true);
+	static const auto jungleClearMenu = this->menu->AddMenu("Jungle Clear Settings");
+	static const auto useQJungleClear = jungleClearMenu->CheckBox("Use Q", true);
+	static const auto useWJungleClear = jungleClearMenu->CheckBox("Use W", true);
+	static const auto useEJungleClear = jungleClearMenu->CheckBox("Use E", true);
 
-	static auto miscMenu = this->menu->AddMenu("Misc Settings");
-	static auto useQAutoHarass = miscMenu->CheckBox("Auto Extended Q", true);
-	static auto minManaQAutoHarass = miscMenu->AddFloat("Min Mana For Extended Q", 0.f, 100.f, 30.f);
-	static auto eMode = comboMenu->AddSelection("E Mode", 0, { "Side", "Mouse Position", "Target Position" });
+	static const auto miscMenu = this->menu->AddMenu("Misc Settings");
+	static const auto useQAutoHarass = miscMenu->CheckBox("Auto Extended Q", true);
+	static const auto minManaQAutoHarass = miscMenu->AddFloat("Min Mana For Extended Q", 0.f, 100.f, 30.f);
+	static const auto eMode = comboMenu->AddSelection("E Mode", 0, { "Side", "Mouse Position", "Target Position" });
 
-	static auto drawMenu = this->menu->AddMenu("Draw Settings");
-	static auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
-	static auto qRangeColor = drawMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
-	static auto drawExtendedQRange = drawMenu->CheckBox("Draw Extended Q Range", false);
-	static auto extendedQRangeColor = drawMenu->AddColor("Extended Q Range Color", 0.f, 0.f, 255.f, 255.f);
-	static auto drawWRange = drawMenu->CheckBox("Draw W Range", false);
-	static auto wRangeColor = drawMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
-	static auto drawRRange = drawMenu->CheckBox("Draw R Range", false);
-	static auto rRangeColor = drawMenu->AddColor("R Range Color", 0.f, 0.f, 255.f, 255.f);
+	static const auto drawMenu = this->menu->AddMenu("Draw Settings");
+	static const auto drawQRange = drawMenu->CheckBox("Draw Q Range", false);
+	static const auto qRangeColor = drawMenu->AddColor("Q Range Color", 0.f, 0.f, 255.f, 255.f);
+	static const auto drawExtendedQRange = drawMenu->CheckBox("Draw Extended Q Range", false);
+	static const auto extendedQRangeColor = drawMenu->AddColor("Extended Q Range Color", 0.f, 0.f, 255.f, 255.f);
+	static const auto drawWRange = drawMenu->CheckBox("Draw W Range", false);
+	static const auto wRangeColor = drawMenu->AddColor("W Range Color", 0.f, 0.f, 255.f, 255.f);
+	static const auto drawRRange = drawMenu->CheckBox("Draw R Range", false);
+	static const auto rRangeColor = drawMenu->AddColor("R Range Color", 0.f, 0.f, 255.f, 255.f);
 
-	static auto game = this->sdk->GetGame();
-	static auto entityList = this->sdk->GetEntityList();
-	static auto player = entityList->Player();
-	static auto orbwalking = this->sdk->GetOrbwalking();
-	static auto damage = this->sdk->GetDamage();
-	static auto spellDataReader = this->sdk->GetSpellDataReader();
+	static const auto game = this->sdk->GetGame();
+	static const auto entityList = this->sdk->GetEntityList();
+	static const auto player = entityList->Player();
+	static const auto orbwalking = this->sdk->GetOrbwalking();
+	static const auto damage = this->sdk->GetDamage();
+	static const auto spellDataReader = this->sdk->GetSpellDataReader();
+	static const auto renderer = this->sdk->GetRenderer();
 
 	static auto q = this->sdk->CreateSpell2(kSlotQ, kTargetCast, true, false, kCollidesWithYasuoWall);
 	q->SetOverrideRange(675.f);
@@ -296,7 +297,7 @@ void TsuhgiAIO::lucian()
 	static auto e = this->sdk->CreateSpell2(kSlotE, kLineCast, false, false, kCollidesWithNothing);
 	e->SetOverrideRange(475.f);
 
-	static auto r = this->sdk->CreateSpell2(kSlotR, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithHeroes | kCollidesWithMinions | kCollidesWithYasuoWall));
+	static auto r = this->sdk->CreateSpell2(kSlotR, kLineCast, true, false, static_cast<eCollisionFlags>(kCollidesWithMinions | kCollidesWithYasuoWall));
 	r->SetSkillshot(0.20f, 110.f, 2500.f, 1400.f);
 
 	//ty based hoola
@@ -308,6 +309,8 @@ void TsuhgiAIO::lucian()
 	};
 
 	eventmanager::GameEventManager::RegisterUpdateEvent([&](event_id_t id) -> void {
+		orbwalking->SetAttacksAllowed(!player->HasBuff("LucianR"));
+
 		auto mode = orbwalking->GetOrbwalkingMode();
 
 		if ((mode == kModeCombo && useQCombo->Enabled())
@@ -413,16 +416,22 @@ void TsuhgiAIO::lucian()
 					if (e->IsReady() && useECombo->Enabled())
 					{
 						Vec3 pos;
-						
+
 						auto m = eMode->GetInteger();
 
 						if (m == 0)
 						{
-							pos = LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65));
+							pos = LPPUtils::To3D(this->sdk, deviation(LPPUtils::To2D(player->GetPosition()), LPPUtils::To2D(target->GetPosition()), 65.f));
 						}
 						else if (m == 1)
 						{
+							auto myPos = player->GetPosition();
+
 							pos = game->CursorPosition();
+							if ((myPos - pos).Length2D() <= player->AttackRange())
+							{
+								pos = LPPUtils::Extend(myPos, pos, 65.f);
+							}
 						}
 						else
 						{
@@ -481,7 +490,13 @@ void TsuhgiAIO::lucian()
 						}
 						else if (m == 1)
 						{
+							auto myPos = player->GetPosition();
+
 							pos = game->CursorPosition();
+							if ((myPos - pos).Length2D() <= player->AttackRange())
+							{
+								pos = LPPUtils::Extend(myPos, pos, 65.f);
+							}
 						}
 						else
 						{
@@ -558,11 +573,9 @@ void TsuhgiAIO::lucian()
 		}
 	});
 
-	static auto renderer = this->sdk->GetRenderer();
-
 	eventmanager::DrawEventManager::RegisterRenderEvent([&](event_id_t id) -> void {
 		auto pos = player->GetPosition();
-		
+
 		if (drawQRange->Enabled())
 		{
 			Vec4 color;
@@ -599,7 +612,7 @@ void TsuhgiAIO::lucian()
 
 IUnit *TsuhgiAIO::findTarget(float range, eDamageType damage) const
 {
-	static auto targetselector = this->sdk->CreateTargetSelector();
+	static const auto targetselector = this->sdk->CreateTargetSelector();
 
 	return targetselector->FindTarget(QuickestKill, damage, range);
 }
